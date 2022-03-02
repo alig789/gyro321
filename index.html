@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<base href="http://node-express-env2.eba-fshy3qn2.us-east-1.elasticbeanstalk.com/" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,height=device-height,user-scalable=no,initial-scale=1.0">
+    <title>Gyroscope</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        button {
+            color: #ffffff;
+            background-color: #8b4bec;
+            font-size: 19px;
+            border: 5px solid #000000;
+            padding: 15px 50px;
+            cursor: pointer
+        }
+
+            button:hover {
+                color: #2d63c8;
+                background-color: #ffffff;
+            }
+    </style>
+</head>
+<body>
+    <button type="button" input type="button" onclick="askPermission()" name="myButton">iPhone noobs click here!</button>
+    <canvas id="canvas1"></canvas>
+    <script type="text/javascript" src="display.js"></script>
+    <script type="text/javascript" src="gyroscope.js"></script>
+    <script type="text/javascript" src="script.js"></script>
+	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+</body>
+<ul id="messages"></ul>
+<form id="form" action="">
+    <input id="input" autocomplete="off" /><button>Send</button>
+</form>
+
+
+<script>
+    var socket = io();
+
+    var form = document.getElementById('form');
+    var input = document.getElementById('input');
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (input.value) {
+            socket.emit('chat message', input.value);
+            input.value = '';
+        }
+    });
+</script>
+</html>
