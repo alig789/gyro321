@@ -38,18 +38,28 @@
 </form>
 
 
-<script>
-    var socket = io();
+<script src="/socket.io/socket.io.js"></script>
 
-    var form = document.getElementById('form');
-    var input = document.getElementById('input');
+    <script>
+      var socket = io();
 
-    form.addEventListener('submit', function (e) {
+      var messages = document.getElementById('messages');
+      var form = document.getElementById('form');
+      var input = document.getElementById('input');
+
+      form.addEventListener('submit', function(e) {
         e.preventDefault();
         if (input.value) {
-            socket.emit('chat message', input.value);
-            input.value = '';
+          socket.emit('chat message', input.value);
+          input.value = '';
         }
-    });
-</script>
+      });
+
+      socket.on('chat message', function(msg) {
+        var item = document.createElement('li');
+        item.textContent = msg;
+        messages.appendChild(item);
+        window.scrollTo(0, document.body.scrollHeight);
+      });
+    </script>
 </html>
