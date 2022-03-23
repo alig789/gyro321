@@ -38,9 +38,18 @@ io.on('connection', (socket) => {
     });
 
     socket.on('created_gyro', (gyroObject,id) => {
-        console.log('recieved gyro '+id);
+        console.log('recieved new gyro '+id);
 
         clients[id].gyroData = gyroObject;
+
+    });
+    socket.on('gyro_update', (id, x,y,z) => {
+        //console.log('recieved gyro update' + id);
+
+        clients[id].gyroData.x = x;
+        clients[id].gyroData.y = y;
+        clients[id].gyroData.z = z;
+
 
     });
     socket.on('chat message', (msg) => {

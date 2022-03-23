@@ -14,10 +14,6 @@
     </style>
 </head>
 <body>
-    <p id="p1">Socket.io stuff</p>
-    <p id="px">x:</p>
-    <p id="py">y:</p>
-    <p id="pz">z:</p>
 
     <h1 id="id01">ID: N/A</h1>
     <h1 id="id02">Connected Users: N/A</h1>
@@ -79,7 +75,8 @@
 
 
             gyroObject.num_id = id
-            socket.emit('created_gyro', gyroObject,id);
+            socket.emit('created_gyro', gyroObject, id);
+
             runGyroscope();
 
         });
@@ -100,13 +97,6 @@
 
 
 
-        function update(phone_object) {
-
-            document.getElementById("px").innerHTML = "x: " + phone_object.x;
-            document.getElementById("py").innerHTML = "y: " + phone_object.y;
-            document.getElementById("pz").innerHTML = "z: " + phone_object.z;
-
-        }
 
 
         const canvas = document.getElementById('canvas1');
@@ -127,10 +117,16 @@
 
                 ctx.fillStyle = "black";
                 ctx.font = "20px Georgia";
-                ctx.fillText("x: " + gyroObject.x, 10, 20);
-                ctx.fillText("y: " + gyroObject.y, 10, 50);
-                ctx.fillText("z: " + gyroObject.z, 10, 80);
-                ctx.fillText("Updates: " + this.updateCount, 10, 120);
+                ctx.fillText("Your info:",10,20);
+                ctx.fillText("x: " + gyroObject.x, 10, 50);
+                ctx.fillText("y: " + gyroObject.y, 10, 80);
+                ctx.fillText("z: " + gyroObject.z, 10, 110);
+                
+                ctx.fillText("Average info:",10,140);
+                ctx.fillText("x: " + gyroObject.x, 10, 170);
+                ctx.fillText("y: " + gyroObject.y, 10, 200);
+                ctx.fillText("z: " + gyroObject.z, 10, 230);
+                ctx.fillText("Updates: " + this.updateCount, 10, 260);
                 this.updateCount++;
 
             }
@@ -188,11 +184,14 @@
                 gyroObject.x = controller.x
                 gyroObject.y = controller.y
                 gyroObject.z = controller.z
+                socket.emit('gyro_update', this.num_id, this.x, this.y, this.z);
+                }
+
 
 
                 //Now that we have the X,Y,Z values, we need to send the data to the server and the client webpage will be finished.
 
-            }
+            
         }
         
         
@@ -209,7 +208,7 @@
             requestAnimationFrame(runGyroscope);
         }
 
-        runGyroscope();
+
 
         
 
