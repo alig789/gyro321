@@ -11,52 +11,212 @@
     <style>
       body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
-      #form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
-      #input { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
-      #input:focus { outline: none; }
-      #form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
-
-      #messages { list-style-type: none; margin: 0; padding: 0; }
-      #messages > li { padding: 0.5rem 1rem; }
-      #messages > li:nth-child(odd) { background: #efefef; }
     </style>
 </head>
 <body>
-    <button type="button" input type="button" onclick="askPermission()" name="myButton2">Click to give permission.</button>
-    <canvas id="canvas1"></canvas>
-	<script type="text/javascript" src="display.js"></script>
-    <script type="text/javascript" src="gyroscope.js"></script>
-    <script type="text/javascript" src="script.js"></script>
-	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <p id="p1">Socket.io stuff</p>
+    <p id="px">x:</p>
+    <p id="py">y:</p>
+    <p id="pz">z:</p>
 
-    <ul id="messages"></ul>
-    <form id="form" action="">
-      <input id="input" autocomplete="off" /><button>Send</button>
-    </form>
-    <script src="/socket.io/socket.io.js"></script>
+    <h1 id="id01">ID: N/A</h1>
+    <h1 id="id02">Connected Users: N/A</h1>
+    <button id="input">Start</button>
+    <button id="input2">Check connections</button>
+
+    <p></p>
+
+
+
+    <canvas id="canvas1"></canvas>
+
+
+    <!-- <script type="text/javascript" src="display.js"></script>-->
+    <!--<script type="text/javascript" src="gyroscope.js"></script>-->
+    <!--<script type="text/javascript" src="script.js"></script>-->
+    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+
+
+
+
+
+
+
 
     <script>
-      var socket = io();
 
-      var messages = document.getElementById('messages');
-      var form = document.getElementById('form');
-      var input = document.getElementById('input');
 
-      form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        if (input.value) {
-          socket.emit('chat message', input.value);
-          input.value = '';
+
+
+        var socket = io();
+
+        var messages = document.getElementById('messages');
+        var form = document.getElementById('form');
+        var input = document.getElementById('input');
+
+        input.addEventListener('click', function (e) {
+
+
+            window.addEventListener("deviceorientation", function (event) {
+                socket.emit('orientation', event.alpha, event.beta, event.gamma);
+
+            });
+
+
+        });
+
+        input2.addEventListener('click', function (e) {
+
+            socket.emit('chat message');
+
+
+        });
+
+        socket.on('new_connect', function (id) {
+
+            const element = document.getElementById("id01");
+            element.innerHTML = "ID: " + id;
+
+
+            gyroObject.num_id = id
+            socket.emit('created_gyro', gyroObject,id);
+            runGyroscope();
+
+        });
+
+
+        socket.on('update_count', function (users) {
+            const element2 = document.getElementById("id02");
+            element2.innerHTML = "Connected Users: " + users;
+        });
+
+        /*socket.on('update_gyro', function (new_phone) {
+            update(new_phone);
+
+        });
+        */
+
+
+
+
+
+        function update(phone_object) {
+
+            document.getElementById("px").innerHTML = "x: " + phone_object.x;
+            document.getElementById("py").innerHTML = "y: " + phone_object.y;
+            document.getElementById("pz").innerHTML = "z: " + phone_object.z;
+
         }
-      });
 
-      socket.on('chat message', function(msg) {
-        var item = document.createElement('li');
-        item.textContent = msg;
-        messages.appendChild(item);
-        window.scrollTo(0, document.body.scrollHeight);
-      });
+
+        const canvas = document.getElementById('canvas1');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth / 2;
+        canvas.height = window.innerHeight / 2;
+        
+        let updateCount = 0;
+
+        class displayCanvas {
+            constructor() {
+                this.updateCount = 0;
+            }
+            update() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = "white";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = "black";
+                ctx.font = "20px Georgia";
+                ctx.fillText("x: " + gyroObject.x, 10, 20);
+                ctx.fillText("y: " + gyroObject.y, 10, 50);
+                ctx.fillText("z: " + gyroObject.z, 10, 80);
+                ctx.fillText("Updates: " + this.updateCount, 10, 120);
+                this.updateCount++;
+
+            }
+
+
+        }
+
+
+        function askPermission() {   //askPermission is an HTML requirement of iOS
+            DeviceOrientationEvent.requestPermission() //This asks for permission (iOS requirement)
+            window.addEventListener("deviceorientation", function (event) { //This listens to the phone orientation values
+                controller.x = event.alpha;
+                controller.y = event.beta;
+                controller.z = event.gamma;
+            });
+        }
+
+        //Android users will have their data automatically working on page load from this one.  It can be removed, the button above should also work.
+        if (window.DeviceOrientationEvent) {
+            window.addEventListener("deviceorientation", function (event) {
+                controller.x = event.alpha;
+                controller.y = event.beta;
+                controller.z = event.gamma;
+
+            });
+        }
+        
+
+
+        //This is where we are temporarily storing the values.  Each Gyroscope client/Object made from script.js will have it's own x, y, z.
+        
+        
+        //This will be the main Gyroscope object, we can initialize it in the main (script.js) if we've confirmed a mobile device.
+        //That object can then use the functions within the class below.
+        const controller = {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+
+        //This will be the main Gyroscope object, we can initialize it in the main (script.js) if we've confirmed a mobile device.
+        //That object can then use the functions within the class below.  
+        class Gyroscope {
+            constructor(num_id) {
+                
+                this.num_id = num_id;
+                this.x = controller.x
+                this.y = controller.y
+                this.z = controller.z
+            }
+
+            //We will call this function recursively from script.  It will return the device orientation data.
+            update() {
+
+                gyroObject.x = controller.x
+                gyroObject.y = controller.y
+                gyroObject.z = controller.z
+
+
+                //Now that we have the X,Y,Z values, we need to send the data to the server and the client webpage will be finished.
+
+            }
+        }
+        
+        
+        //Initialize the Gyroscope object for the mobile user
+        let gyroObject = new Gyroscope(0);
+        let display = new displayCanvas();
+        let frameCounter = 0;
+
+        //This is the recursive function that will keep updating the gyroscope and display canvas
+        function runGyroscope() {
+            gyroObject.update();
+            display.update();
+            frameCounter++;
+            requestAnimationFrame(runGyroscope);
+        }
+
+        runGyroscope();
+
+        
+
+        
+
+
     </script>
-  </body>
+</body>
 </html>
 

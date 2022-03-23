@@ -15,11 +15,14 @@ class displayCanvas {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         ctx.fillStyle = "black";
-        ctx.font = "20px Georgia";
+        ctx.font = "20px Impact";
+        
         ctx.fillText("x: " + gyroObject.x, 10, 20);
         ctx.fillText("y: " + gyroObject.y, 10, 50);
         ctx.fillText("z: " + gyroObject.z, 10, 80);
+
         ctx.fillText("Updates: " + this.updateCount, 10, 120);
+        ctx.fillText("your id: " + gyroObject.player, 10, 150);
         this.updateCount++;
 
     }

@@ -10,7 +10,7 @@
 //We do not necessarily need to validate for mobile/desktop clients, the scripts will just record null values for non-mobile users.
 
 //Initialize the Gyroscope object for the mobile user
-let gyroObject = new Gyroscope(0);
+
 let display = new displayCanvas();
 let frameCounter = 0;
 
@@ -25,4 +25,22 @@ function runGyroscope() {
 runGyroscope();
 
 
+function askPermission() {   //askPermission is an HTML requirement of iOS
+    DeviceOrientationEvent.requestPermission() //This asks for permission (iOS requirement)
+    window.addEventListener("deviceorientation", function (event) { //This listens to the phone orientation values
+        controller.x = event.alpha;
+        controller.y = event.beta;
+        controller.z = event.gamma;
+    });
+}
+
+//Android users will have their data automatically working on page load from this one.  It can be removed, the button above should also work.
+if (window.DeviceOrientationEvent) {
+    window.addEventListener("deviceorientation", function (event) {
+        controller.x = event.alpha;
+        controller.y = event.beta;
+        controller.z = event.gamma;
+
+    });
+}
 
