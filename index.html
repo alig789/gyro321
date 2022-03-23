@@ -53,10 +53,10 @@
         input.addEventListener('click', function (e) {
 
 
-            window.addEventListener("deviceorientation", function (event) {
-                socket.emit('orientation', event.alpha, event.beta, event.gamma);
 
-            });
+            socket.emit('orientation', gyroObject.num_id);
+
+
 
 
         });
@@ -85,6 +85,11 @@
         socket.on('update_count', function (users) {
             const element2 = document.getElementById("id02");
             element2.innerHTML = "Connected Users: " + users;
+        });
+
+        socket.on('average_orientation', function (average) {
+
+            average_orientation = average;
         });
 
         /*socket.on('update_gyro', function (new_phone) {
@@ -123,9 +128,9 @@
                 ctx.fillText("z: " + gyroObject.z, 10, 110);
                 
                 ctx.fillText("Average info:",10,140);
-                ctx.fillText("x: " + gyroObject.x, 10, 170);
-                ctx.fillText("y: " + gyroObject.y, 10, 200);
-                ctx.fillText("z: " + gyroObject.z, 10, 230);
+                ctx.fillText("x: " + average_orientation[0], 10, 170);
+                ctx.fillText("y: " + average_orientation[1], 10, 200);
+                ctx.fillText("z: " + average_orientation[2], 10, 230);
                 ctx.fillText("Updates: " + this.updateCount, 10, 260);
                 this.updateCount++;
 
@@ -196,6 +201,7 @@
         
         
         //Initialize the Gyroscope object for the mobile user
+        let average_orientation = [0, 0, 0];
         let gyroObject = new Gyroscope(0);
         let display = new displayCanvas();
         let frameCounter = 0;

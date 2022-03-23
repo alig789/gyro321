@@ -49,27 +49,29 @@ io.on('connection', (socket) => {
         clients[id].gyroData.x = x;
         clients[id].gyroData.y = y;
         clients[id].gyroData.z = z;
+        io.emit('average_orientation',averageOrientation(clients))
 
 
     });
     socket.on('chat message', (msg) => {
         console.log('message: ' + msg);
         console.log(clients);
+        console.log('Average orientation: ' + averageOrientation(clients));
         console.log(`connected clients = ${client_count}`)
 		io.emit('chat message', msg);
 		
     });
-    /*socket.on('orientation', (x,y,z) => {
-        console.log('message: orientation');
+    socket.on('orientation', (id) => {
+        console.log('message: orientation '+id);
 
-        clients[new_phone.num_id].x = x;
-        clients[new_phone.num_id].y = y;
-        clients[new_phone.num_id].z = z;
+        clients[id].gyroData.x = 23;
+        clients[id].gyroData.y = 25;
+        clients[id].gyroData.z = 26;
 
-        io.emit('update_gyro', new_phone);
+
 
     });
-    */
+    
 
 
 });
@@ -86,6 +88,30 @@ class phoneGyro {
         this.socket_id = socket_id;
         this.num_id = num_id;
         this.gyroData = gyroData;
+    }
+}
+
+function averageOrientation(phone_array) {
+    num_phones = 0;
+    big_x = 0;
+    big_y = 0;
+    big_z = 0;
+    for (i = 0; i < phone_array.length; i++) {
+        if (phone_array[i] == null) {
+            continue;
+        }
+        else {
+            big_x += phone_array[i].gyroData.x;
+            big_y += phone_array[i].gyroData.y;
+            big_z += phone_array[i].gyroData.z;
+            num_phones++;
+        }
+    }
+    if (num_phones > 0) {
+        return [big_x / num_phones, big_y / num_phones, big_z / num_phones];
+    }
+    else {
+        return null;
     }
 }
 
