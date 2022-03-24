@@ -45,11 +45,12 @@ io.on('connection', (socket) => {
     });
     socket.on('gyro_update', (id, x,y,z) => {
         //console.log('recieved gyro update' + id);
-
-        clients[id].gyroData.x = x;
-        clients[id].gyroData.y = y;
-        clients[id].gyroData.z = z;
-        io.emit('average_orientation',averageOrientation(clients))
+        if (clients[id].gyroData != null) {
+            clients[id].gyroData.x = x;
+            clients[id].gyroData.y = y;
+            clients[id].gyroData.z = z;
+            io.emit('average_orientation', averageOrientation(clients))
+        }
 
 
     });
@@ -92,6 +93,7 @@ class phoneGyro {
 }
 
 function averageOrientation(phone_array) {
+
     num_phones = 0;
     big_x = 0;
     big_y = 0;
@@ -101,10 +103,12 @@ function averageOrientation(phone_array) {
             continue;
         }
         else {
-            big_x += phone_array[i].gyroData.x;
-            big_y += phone_array[i].gyroData.y;
-            big_z += phone_array[i].gyroData.z;
-            num_phones++;
+            if (phone_array[i].gyroData != null) {
+                big_x += phone_array[i].gyroData.x;
+                big_y += phone_array[i].gyroData.y;
+                big_z += phone_array[i].gyroData.z;
+                num_phones++;
+            }
         }
     }
     if (num_phones > 0) {
