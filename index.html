@@ -9,8 +9,27 @@
     <title>Gyroscope</title>
     <link rel="stylesheet" href="style.css">
     <style>
-      body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-
+      body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color:rgb(66, 65, 65) }
+		canvas {
+		height: 100%;
+		max-height: 100%;
+		width: 100%;
+		max-width: 100%;
+		display: inline-block;
+		vertical-align: top;
+		}
+		button {
+			color: #ffffff;
+			background-color: #000000;
+			font-size: 19px;
+			border: 5px solid rgb(32, 32, 32);
+			padding: 15px 50px;
+			cursor: pointer;
+		}
+		button:hover {
+			color: #212325;
+			background-color: #4b4b4b;
+		}
     </style>
 </head>
 <body>
@@ -117,7 +136,14 @@
             }
             update() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = "white";
+                // ctx.fillStyle = "white";
+                // ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                //Make it change colors while you tilt the x, y, z
+                ctx.fillStyle = `rgb(
+                ${Math.floor(255 - Math.abs(gyroObject.x))},
+                ${Math.floor(255 - Math.abs(gyroObject.y))},
+                ${Math.floor(255 - Math.abs(gyroObject.z))}`;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
 
                 ctx.fillStyle = "black";
@@ -131,8 +157,9 @@
                 ctx.fillText("x: " + average_orientation[0], 10, 170);
                 ctx.fillText("y: " + average_orientation[1], 10, 200);
                 ctx.fillText("z: " + average_orientation[2], 10, 230);
-                ctx.fillText("Updates: " + this.updateCount, 10, 260);
-                this.updateCount++;
+            //    ctx.fillText("Updates: " + this.updateCount, 10, 260);   //We won't need this
+            //    this.updateCount++;
+        
 
             }
 
@@ -189,7 +216,7 @@
                 gyroObject.x = controller.x
                 gyroObject.y = controller.y
                 gyroObject.z = controller.z
-                socket.emit('gyro_update', this.num_id, this.x, this.y, this.z);
+                socket.emit('gyro_update', this.num_id, this.x, this.y, this.z); //Delete this, it will be too frequent to use and would lag the game
                 }
 
 
