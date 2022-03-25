@@ -232,7 +232,7 @@
             gyroObject.update();
             display.update();
             frameCounter++;
-            if (frameCounter % 17 == 0) {
+            if (frameCounter % 7 == 0) {
                 gyroObject.send_update();
             }
             requestAnimationFrame(runGyroscope);
