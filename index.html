@@ -207,8 +207,11 @@
                 gyroObject.x = controller.x
                 gyroObject.y = controller.y
                 gyroObject.z = controller.z
+                
+            }
+            send_update() {
                 socket.emit('gyro_update', this.num_id, this.x, this.y, this.z);
-                }
+            }
 
 
 
@@ -229,6 +232,9 @@
             gyroObject.update();
             display.update();
             frameCounter++;
+            if (frameCounter % 17 == 0) {
+                gyroObject.send_update();
+            }
             requestAnimationFrame(runGyroscope);
         }
 
