@@ -272,8 +272,8 @@
             gyroObject.update();
             display.update();
             frameCounter++;
-            cube.rotation.x = average_orientation[1];
-            cube.rotation.y = average_orientation[2];
+            cube.rotation.x = (average_orientation[1] / 180);
+            cube.rotation.y = (average_orientation[2] / 180);
             renderer.render(scene, camera);
             requestAnimationFrame(runGyroscope);
         }
