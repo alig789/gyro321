@@ -22,17 +22,30 @@
 			color: #212325;
 			background-color: #4b4b4b;
 		}
+        #info {
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            
+            z-index: 100;
+            display: block;
+        }
+        #canvas1{
+            position: absolute;
+            top: 250px;
+        }
     </style>
 </head>
 <body>
+    <div id="info">
+        <h1 id="id01">ID: N/A</h1>
+        <h1 id="id02">Connected Users: N/A</h1>
+        <button id="input">iPhone users click here!</button>
+        <button id="input2">Check connections</button>
 
-    <h1 id="id01">ID: N/A</h1>
-    <h1 id="id02">Connected Users: N/A</h1>
-    <button id="input">iPhone users click here!</button>
-    <button id="input2">Check connections</button>
+        <p></p>
 
-    <p></p>
-
+    </div>
 
 
     <canvas id="canvas1"></canvas>
@@ -42,6 +55,7 @@
     <!--<script type="text/javascript" src="gyroscope.js"></script>-->
     <!--<script type="text/javascript" src="script.js"></script>-->
     <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="three.js"></script>
 
 
 
@@ -119,7 +133,7 @@
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        
+
         let updateCount = 0;
 
         class displayCanvas {
@@ -132,20 +146,21 @@
                 //ctx.fillRect(0, 0, canvas.width, canvas.height);
 
                 //Make it change colors while you tilt the x, y, z
-                ctx.fillStyle = `rgb(
-                ${Math.floor(255 - Math.abs(gyroObject.x/2))},
-                ${Math.floor(255 - Math.abs(gyroObject.y))},
-                ${Math.floor(255 - Math.abs(gyroObject.z))}`;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                /*ctx.fillStyle = `rgb(
+                        ${Math.floor(255 - Math.abs(gyroObject.x / 2))},
+                        ${Math.floor(255 - Math.abs(gyroObject.y))},
+                        ${Math.floor(255 - Math.abs(gyroObject.z))}`;
+                */
+                //ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                ctx.fillStyle = "black";
+                //ctx.fillStyle = "gray";
                 ctx.font = "20px Georgia";
-                ctx.fillText("Your info:",10,20);
+                ctx.fillText("Your info:", 10, 20);
                 ctx.fillText("x: " + parseInt(gyroObject.x), 10, 50);
                 ctx.fillText("y: " + parseInt(gyroObject.y), 10, 80);
                 ctx.fillText("z: " + parseInt(gyroObject.z), 10, 110);
-                
-                ctx.fillText("Average info:",10,140);
+
+                ctx.fillText("Average info:", 10, 140);
                 ctx.fillText("x: " + parseInt(average_orientation[0]), 10, 170);
                 ctx.fillText("y: " + parseInt(average_orientation[1]), 10, 200);
                 ctx.fillText("z: " + parseInt(average_orientation[2]), 10, 230);
@@ -176,12 +191,12 @@
 
             });
         }
-        
+
 
 
         //This is where we are temporarily storing the values.  Each Gyroscope client/Object made from script.js will have it's own x, y, z.
-        
-        
+
+
         //This will be the main Gyroscope object, we can initialize it in the main (script.js) if we've confirmed a mobile device.
         //That object can then use the functions within the class below.
         const controller = {
@@ -191,10 +206,10 @@
         }
 
         //This will be the main Gyroscope object, we can initialize it in the main (script.js) if we've confirmed a mobile device.
-        //That object can then use the functions within the class below.  
+        //That object can then use the functions within the class below.
         class Gyroscope {
             constructor(num_id) {
-                
+
                 this.num_id = num_id;
                 this.x = controller.x
                 this.y = controller.y
@@ -208,16 +223,44 @@
                 gyroObject.y = controller.y
                 gyroObject.z = controller.z
                 socket.emit('gyro_update', this.num_id, this.x, this.y, this.z);
-                }
+            }
 
 
 
-                //Now that we have the X,Y,Z values, we need to send the data to the server and the client webpage will be finished.
+            //Now that we have the X,Y,Z values, we need to send the data to the server and the client webpage will be finished.
 
+
+        }
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        scene.background = new THREE.Color(0x707070);
+
+        const geometry = new THREE.BoxGeometry();
+
+        
+        const texture = new THREE.TextureLoader().load("textures/cobble.png");
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        
+
+        const material = new THREE.MeshBasicMaterial({ map:texture });
+        //const material = new THREE.MeshBasicMaterial({ color: 0x000000 });
+        const cube = new THREE.Mesh(geometry, material);
+        scene.add(cube);
+
+        camera.position.z = 5;
+
+        function animate() {
+            requestAnimationFrame(animate);
             
         }
-        
-        
+
+
         //Initialize the Gyroscope object for the mobile user
         let average_orientation = [0, 0, 0];
         let gyroObject = new Gyroscope(0);
@@ -229,14 +272,17 @@
             gyroObject.update();
             display.update();
             frameCounter++;
+            cube.rotation.x = average_orientation[1];
+            cube.rotation.y = average_orientation[2];
+            renderer.render(scene, camera);
             requestAnimationFrame(runGyroscope);
         }
 
 
 
-        
 
-        
+
+
 
 
     </script>
