@@ -255,11 +255,12 @@
 
         camera.position.z = 5;
 
-        function animate() {
-            requestAnimationFrame(animate);
-            
-        }
+        
 
+        function degrees_to_radians(degrees) {
+            var pi = Math.PI;
+            return degrees * (pi / 180);
+        }
 
         //Initialize the Gyroscope object for the mobile user
         let average_orientation = [0, 0, 0];
@@ -272,8 +273,13 @@
             gyroObject.update();
             display.update();
             frameCounter++;
-            cube.rotation.x = (average_orientation[1] / 180);
-            cube.rotation.y = (average_orientation[2] / 180);
+
+            console.log(cube.rotation.x);
+            console.log(cube.rotation.y);
+            console.log(cube.rotation.z);
+            cube.rotation.x = degrees_to_radians(average_orientation[1]);
+            cube.rotation.y = degrees_to_radians(average_orientation[2]);
+
             renderer.render(scene, camera);
             requestAnimationFrame(runGyroscope);
         }
