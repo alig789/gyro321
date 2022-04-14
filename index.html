@@ -41,7 +41,7 @@
         <h1 id="id01">ID: N/A</h1>
         <h1 id="id02">Connected Users: N/A</h1>
         <button id="input">iPhone users click here!</button>
-        <button id="input2">Check connections</button>
+        <button id="input2">RESET</button>
 
         <p></p>
 
@@ -56,6 +56,11 @@
     <!--<script type="text/javascript" src="script.js"></script>-->
     <script type="text/javascript" src="/socket.io/socket.io.js"></script>
     <script type="text/javascript" src="three.js"></script>
+
+    <script src="cannon.min.js"></script>
+
+
+
 
 
 
@@ -88,7 +93,11 @@
 
         input2.addEventListener('click', function (e) {
 
-            socket.emit('chat message');
+            
+            world.remove(marble0[0]);
+            scene.remove(marble0[1]);
+            marble0 = createMarble(scene, world, 1, 1, 1, 0, 0, 3);
+            
 
 
         });
@@ -239,11 +248,15 @@
         document.body.appendChild(renderer.domElement);
 
         scene.background = new THREE.Color(0x707070);
-        camera.position.z = 5;
-        
-        
-        function createCube(scene,xscale,yscale,zscale,xpos,ypos,zpos) {
-            
+        camera.position.z = 10;
+        //camera.position.set(0, 5, 10);
+        //camera.rotation.set(-0.2, 0, 0);
+
+
+
+
+        function createCube(scene, xscale, yscale, zscale, xpos, ypos, zpos) {
+
             const geometry = new THREE.BoxGeometry(xscale, yscale, zscale);
 
 
@@ -253,7 +266,7 @@
 
 
             const material = new THREE.MeshBasicMaterial({ map: texture });
-            
+
             const cube1 = new THREE.Mesh(geometry, material);
             cube1.position.set(xpos, ypos, zpos);
             pivot.add(cube1);
@@ -279,9 +292,84 @@
             //scene.add(cube1);
 
         }
+        function createMarble(scene, world, xscale, yscale, zscale, xpos, ypos, zpos) {
+
+            const geometry = new THREE.SphereGeometry(xscale);
+            const texture = new THREE.TextureLoader().load("textures/dirt.png");
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            const material = new THREE.MeshBasicMaterial({ map: texture });
+
+            const sphere1 = new THREE.Mesh(geometry, material);
+            sphere1.useQuaternion = true;
+            sphere1.position.set(xpos, ypos, zpos);
+            scene.add(sphere1);
+
+            var sphereBody = new CANNON.Body({
+                mass: 5, // kg
+                position: new CANNON.Vec3(xpos, ypos, zpos), // m
+                shape: new CANNON.Sphere(xscale)
+            });
+            world.addBody(sphereBody);
+            //threejsBodies.push(sphere1);
+            //cannonjsBodies.push(sphereBody);
+            return [sphereBody, sphere1];
+            
+        }
+        function createBox(scene,world, xscale, yscale, zscale, xpos, ypos, zpos) {
+
+            const geometry = new THREE.BoxGeometry(xscale,yscale,zscale);
+            const texture = new THREE.TextureLoader().load("textures/wood.png");
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            const material = new THREE.MeshBasicMaterial({ map: texture });
+
+            const box1 = new THREE.Mesh(geometry, material);
+            box1.useQuaternion = true;
+            box1.position.set(xpos, ypos, zpos);
+            box1.rotation.x = 0.2
+            scene.add(box1);
+
+            var boxBody = new CANNON.Body({
+                mass: 0, // kg
+                position: new CANNON.Vec3(xpos, ypos, zpos), // m
+                shape: new CANNON.Box(new CANNON.Vec3(xscale/2, yscale/2, zscale/2)),
+                quaternion: box1.quaternion
+            });
+            world.addBody(boxBody);
+            threejsBodies.push(box1);
+            cannonjsBodies.push(boxBody);
+            return;
+
+
+        }
+        function createBoxShape(scene, world,body, xscale, yscale, zscale, xpos, ypos, zpos) {
+
+            const geometry = new THREE.BoxGeometry(xscale, yscale, zscale);
+            const texture = new THREE.TextureLoader().load("textures/wood.png");
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            const material = new THREE.MeshBasicMaterial({ map: texture });
+
+            const box1 = new THREE.Mesh(geometry, material);
+            box1.useQuaternion = true;
+            box1.position.set(xpos, ypos, zpos);
+            box1.rotation.x = 0.1
+            pivot.add(box1);
+
+            boxBody = new CANNON.Box(new CANNON.Vec3(xscale/2, yscale/2, zscale/2));
+            body.addShape(boxBody, new CANNON.Vec3(xpos, ypos, zpos));
+            
+
+            mazeMeshBodies.push(box1);
+            //cannonjsBodies.push(boxBody);
+            return;
+
+
+        }
         function createFloor(scene, xscale, yscale, zscale, xpos, ypos, zpos) {
 
-            
+
             const geometry = new THREE.BoxGeometry(xscale, yscale, zscale);
 
             const texture = new THREE.TextureLoader().load("textures/wood.png");
@@ -297,7 +385,13 @@
 
 
         }
-        
+
+        //AMOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+        window.addEventListener('DOMContentLoaded', async () => {
+            
+        });
+        //AMOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+
 
         function degrees_to_radians(degrees) {
             var pi = Math.PI;
@@ -305,50 +399,140 @@
         }
 
         //Initialize the Gyroscope object for the mobile user
+
+
+        let threejsBodies = [];
+        let cannonjsBodies = [];
+
+        let mazeMeshBodies = [];
+        let mazePhysicsBodies = [];
+       
         let average_orientation = [0, 0, 0];
         let gyroObject = new Gyroscope(0);
         let display = new displayCanvas();
         let frameCounter = 0;
         const pivot = new THREE.Group();
+        let clock = new THREE.Clock();
+        let floorobject = null;
 
         //const cube = createCube(scene, 1, 1, 1, 0, 0, 0);//cobble block
 
-        createFloor(scene, 6, 6, 1, 0.5, 0.5, -1);
-        //left wall
-        createWall(scene, 1, 1, 1, 3, 3, 0);
-        createWall(scene, 1, 1, 1, 3, 2, 0);
-        createWall(scene, 1, 1, 1, 3, 1, 0);
-        createWall(scene, 1, 1, 1, 3, 0, 0);
-        createWall(scene, 1, 1, 1, 3, -1, 0);
-        createWall(scene, 1, 1, 1, 3, -2, 0);
+        //createFloor(scene, 6, 1, 6, 0.5, -1, 0.5);
+        //back wall
+        /*
+         * createWall(scene, 1, 1, 1, 2, 0, -2);
+        createWall(scene, 1, 1, 1, 1, 0, -2);
+        createWall(scene, 1, 1, 1, 0, 0, -2);
+        createWall(scene, 1, 1, 1, -1, 0, -2);
+
+
 
         //right wall
-        createWall(scene, 1, 1, 1, -3, 3, 0);
-        createWall(scene, 1, 1, 1, -3, 2, 0);
-        createWall(scene, 1, 1, 1, -3, 1, 0);
-        createWall(scene, 1, 1, 1, -3, 0, 0);
-        createWall(scene, 1, 1, 1, -3, -1, 0);
-        createWall(scene, 1, 1, 1, -3, -2, 0);
+        createWall(scene, 1, 1, 1, 3, 0, 3);
+        createWall(scene, 1, 1, 1, 3, 0, 2);
+        createWall(scene, 1, 1, 1, 3, 0, 1);
+        createWall(scene, 1, 1, 1, 3, 0, 0);
+        createWall(scene, 1, 1, 1, 3, 0, -1);
+        createWall(scene, 1, 1, 1, 3, 0, -2);
 
-        //top wall
-        createWall(scene, 1, 1, 1, -2, 3, 0);
-        createWall(scene, 1, 1, 1, -1, 3, 0);
-        createWall(scene, 1, 1, 1, 0, 3, 0);
-        createWall(scene, 1, 1, 1, 1, 3, 0);
-        createWall(scene, 1, 1, 1, 2, 3, 0);
 
-        //bottom wall
-        createWall(scene, 1, 1, 1, -2, -2, 0);
-        createWall(scene, 1, 1, 1, -1, -2, 0);
-        createWall(scene, 1, 1, 1, 0, -2, 0);
-        createWall(scene, 1, 1, 1, 1, -2, 0);
-        createWall(scene, 1, 1, 1, 2, -2, 0);
+        //left wall
+        createWall(scene, 1, 1, 1, -2, 0, 3);
+        createWall(scene, 1, 1, 1, -2, 0, 2);
+        createWall(scene, 1, 1, 1, -2, 0, 1);
+        createWall(scene, 1, 1, 1, -2, 0, 0);
+        createWall(scene, 1, 1, 1, -2, 0, -1);
+        createWall(scene, 1, 1, 1, -2, 0, -2);
+
+        //front wall
+        createWall(scene, 1, 1, 1, -1, 0, 3);
+        createWall(scene, 1, 1, 1, 0, 0, 3);
+        createWall(scene, 1, 1, 1, 1, 0, 3);
+        createWall(scene, 1, 1, 1, 2, 0, 3);
+        */
+        //CANNOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOON
+
+        // Setup our world
+        var world = new CANNON.World();
+        world.gravity.set(0, 0, -9.82); // m/s²
+
+        // Create a sphere
+        /*var radius = 1; // m
+        var sphereBody = new CANNON.Body({
+            mass: 5, // kg
+            position: new CANNON.Vec3(0, 0, 10), // m
+            shape: new CANNON.Sphere(radius)
+        });
+        var floorBody = new CANNON.Body({
+            mass: 0, // kg
+            position: new CANNON.Vec3(0, 0, 0), // m
+            shape: new CANNON.Box(new CANNON.Vec3(4, 4, 4))
+        });
+        world.addBody(sphereBody);
+        world.addBody(floorBody);
         
+        // Create a plane
+        var groundBody = new CANNON.Body({
+            mass: 0 // mass == 0 makes the body static
+        });
+        var groundShape = new CANNON.Plane();
+        groundBody.addShape(groundShape);
+        world.addBody(groundBody);
+        */
+        var fixedTimeStep = 1.0 / 60.0; // seconds
+        var maxSubSteps = 3;
+
+        // Start the simulation loop
+        var lastTime;
+        (function simloop(time) {
+            requestAnimationFrame(simloop);
+            if (lastTime !== undefined) {
+                var dt = (time - lastTime) / 1000;
+                world.step(fixedTimeStep, dt, maxSubSteps);
+                copyCoords(marble0[1], marble0[0]);
+                copyCoords(body, pivot);
+                //copyCoords(floor0, floorBody);
+            }
+            if (cannonjsBodies.length != 0) { 
+                //body.quaternion.y += 0.001;
+
+            }
+
+            lastTime = time;
+        })();
+        function copyCoords(mesh, body) {
+            mesh.position.x = body.position.x;
+            mesh.position.y = body.position.y;
+            mesh.position.z = body.position.z;
+            mesh.quaternion.x = body.quaternion.x;
+            mesh.quaternion.y = body.quaternion.y;
+            mesh.quaternion.z = body.quaternion.z;
+            mesh.quaternion.w = body.quaternion.w;
+        }
+
+
+
+
+        //createBox(scene, world, 5, 5, 1, 0, 0, 0);
+
+
+        let marble0 = createMarble(scene, world, 1, 1, 1, 0, 0, 3);
+        //floor0 = createBox(scene, 4, 4, 4, 0, 0, 0);
+        //CANOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOON
+
+
+        body = new CANNON.Body({
+            mass: 0
+        });
+        createBoxShape(scene, world, body, 10, 10, 1, 0, 0, 0);
+        createBoxShape(scene, world, body, 1, 10, 1, 5, 0, 1);
+        createBoxShape(scene, world, body, 1, 10, 1, -5, 0, 1);
+        world.addBody(body);
         //var mesh2 = new THREE.BoxGeometry(singleGeometry);
         scene.add(pivot);
 
-        
-        
+
+
 
         //This is the recursive function that will keep updating the gyroscope and display canvas
         function runGyroscope() {
@@ -356,13 +540,15 @@
             display.update();
             frameCounter++;
 
-            /*console.log(cube.rotation.x);
-            console.log(pivot.rotation.y);
+            //console.log(cube.rotation.x);
             console.log(pivot.rotation.x);
-            */
+            //console.log(pivot.rotation.x);
+            
             pivot.rotation.x = degrees_to_radians(average_orientation[1]);
             pivot.rotation.y = degrees_to_radians(average_orientation[2]);
-            
+            //pivot.rotation.y -= 0.001
+
+
             renderer.render(scene, camera);
             requestAnimationFrame(runGyroscope);
         }

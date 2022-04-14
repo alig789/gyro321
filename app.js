@@ -45,11 +45,13 @@ io.on('connection', (socket) => {
     });
     socket.on('gyro_update', (id, x,y,z) => {
         //console.log('recieved gyro update' + id);
-        if (clients[id].gyroData != null) {
-            clients[id].gyroData.x = x;
-            clients[id].gyroData.y = y;
-            clients[id].gyroData.z = z;
-            io.emit('average_orientation', averageOrientation(clients))
+        if (clients[id] != null) {
+            if (clients[id].gyroData != null) {
+                clients[id].gyroData.x = x;
+                clients[id].gyroData.y = y;
+                clients[id].gyroData.z = z;
+                io.emit('average_orientation', averageOrientation(clients))
+            }
         }
 
 

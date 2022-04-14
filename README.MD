@@ -1,1 +1,3 @@
-http://gyro321.us-east-1.elasticbeanstalk.com/
+https://gyroscope.live
+
+Collaborative marble maze game using gyroscope controls
