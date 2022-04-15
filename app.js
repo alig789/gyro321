@@ -3,6 +3,7 @@ const app = express();
 const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
+const CANNON  = require("./public/cannon.min.js");
 const io = new Server(server);
 
 
@@ -17,6 +18,59 @@ var clients = [];
 var client_count = 0;
 var index = 0;
 
+var world = new CANNON.World();
+world.gravity.set(0, 0, -9.82); // m/s²
+
+var fixedTimeStep = 1.0 / 60.0; // seconds
+var maxSubSteps = 3;
+var serverMarble = null;
+var serverBoxes_pos = [];
+var serverBoxes_scale = [];
+
+
+startSimulation();
+
+function startSimulation() {
+    body = new CANNON.Body({
+            mass: 0
+    });
+    serverMarble = createMarble(world, 1, 1, 1, 0, 0, 10);
+    createBoxShape(world, body, 10, 10, 1, 0, 0, 0);
+    createBoxShape(world, body, 1, 10, 1, 5, 0, 1);
+    createBoxShape(world, body, 1, 10, 1, -5, 0, 1);
+    
+    world.addBody(body);
+        
+}
+//GAME LOGIC
+
+const hrtimeMs = function () {
+    let time = process.hrtime()
+    return time[0] * 1000 + time[1] / 1000000
+}
+
+const TICK_RATE = 20
+let tick = 0
+let previous = hrtimeMs()
+let tickLengthMs = 1000 / TICK_RATE
+
+const loop = () => {
+    setTimeout(loop, tickLengthMs)
+    let now = hrtimeMs()
+    let delta = (now - previous) / 1000
+    world.step(fixedTimeStep, delta, maxSubSteps);
+    io.emit('marble_info', serverMarble.position, serverMarble.quaternion)
+    io.emit('pivot_info', body.quaternion);
+    body.quaternion.y+=0.001
+   
+    previous = now
+    tick++
+}
+
+loop()
+
+//GAME LOGIC END
+
 io.on('connection', (socket) => {
 
     let new_phone = new phoneGyro(socket.id, index++);
@@ -25,6 +79,8 @@ io.on('connection', (socket) => {
     client_count++;
     io.to(new_phone.socket_id).emit('new_connect', new_phone.num_id);
     io.emit('update_count', client_count);
+    io.emit('server_boxes', serverBoxes_pos, serverBoxes_scale);
+    io.emit('new_marble', serverMarble.radius);
 
 
 
@@ -51,6 +107,7 @@ io.on('connection', (socket) => {
                 clients[id].gyroData.y = y;
                 clients[id].gyroData.z = z;
                 io.emit('average_orientation', averageOrientation(clients))
+                
             }
         }
 
@@ -120,6 +177,42 @@ function averageOrientation(phone_array) {
         return null;
     }
 }
+
+
+function createMarble(world, xscale, yscale, zscale, xpos, ypos, zpos) {
+
+    var sphereBody = new CANNON.Body({
+        mass: 5, // kg
+        position: new CANNON.Vec3(xpos, ypos, zpos), // m
+        shape: new CANNON.Sphere(xscale)
+    });
+    world.addBody(sphereBody);
+    
+    //threejsBodies.push(sphere1);
+    //cannonjsBodies.push(sphereBody);
+    return sphereBody;
+
+}
+
+function createBoxShape(world, body, xscale, yscale, zscale, xpos, ypos, zpos) {
+
+
+    var scale = new CANNON.Vec3(xscale , yscale , zscale); //for some reason cannon uses half scale of threejs
+    var scale2 = new CANNON.Vec3(xscale / 2, yscale / 2, zscale / 2);
+    var pos = new CANNON.Vec3(xpos, ypos, zpos);
+
+    boxBody = new CANNON.Box(scale2);
+    body.addShape(boxBody, pos);
+
+    serverBoxes_pos.push(pos);
+    serverBoxes_scale.push(scale);
+
+    //cannonjsBodies.push(boxBody);
+    return;
+
+
+}
+
 
 //First we will add the deviceorientation events, and later we will intialize them into Javascript variables.
 
