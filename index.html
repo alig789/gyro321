@@ -34,6 +34,68 @@
             position: absolute;
             top: 250px;
         }
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+            /* Hide default HTML checkbox */
+            .switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+        }
+
+            .slider:before {
+                position: absolute;
+                content: "";
+                height: 26px;
+                width: 26px;
+                left: 4px;
+                bottom: 4px;
+                background-color: white;
+                -webkit-transition: .4s;
+                transition: .4s;
+            }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px #2196F3;
+        }
+
+        input:checked + .slider:before {
+            -webkit-transform: translateX(26px);
+            -ms-transform: translateX(26px);
+            transform: translateX(26px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 34px;
+        }
+
+        .slider.round:before {
+                border-radius: 50%;
+            }
     </style>
 </head>
 <body>
@@ -44,7 +106,10 @@
         <button id="input2">RESET</button>
 
         <p></p>
-
+        <label class="switch">
+            <input id ="slider" type="checkbox" checked>
+            <span class="slider"></span>
+        </label>
     </div>
 
 
@@ -79,30 +144,45 @@
         var messages = document.getElementById('messages');
         var form = document.getElementById('form');
         var input = document.getElementById('input');
+        var slider = document.getElementById('slider');
+
 
         input.addEventListener('click', function (e) {
-
-
-
             askPermission()
+        });
 
-
-
-
+        slider.addEventListener('change', function () {
+            if (this.checked) {
+                gyro_enabled = true;
+            }
+            else {
+                gyro_enabled = false;
+            }
         });
 
         input2.addEventListener('click', function (e) {
 
             
-            world.remove(marble0[0]);
-            scene.remove(marble0[1]);
-            marble0 = createMarble(scene, world, 1, 1, 1, 0, 0, 3);
             
-
+            
+            socket.emit('chat message', "stuff");
+            socket.emit('reset');
 
         });
 
-        socket.on('new_connect', function (id) {
+        socket.on('client_reset', function () {
+            world.remove(marble0[0]);
+            scene.remove(marble0[1]);
+            marble0 = createMarble(scene, world, 1, 1, 1, 0, 0, 3);
+        });
+
+        socket.on('assign_id', function (id) {
+
+            gyroObject.id = id;
+
+        });
+
+        socket.on('new_connect', function (id,position) {
 
             const element = document.getElementById("id01");
             element.innerHTML = "ID: " + id;
@@ -110,6 +190,7 @@
 
             gyroObject.num_id = id
             socket.emit('created_gyro', gyroObject, id);
+            average_position = position
 
             runGyroscope();
 
@@ -121,31 +202,18 @@
             element2.innerHTML = "Connected Users: " + users;
         });
 
-        socket.on('average_orientation', function (average) {
+        socket.on('average_orientation', function (orientation,position,velocity) {
 
-            average_orientation = average;
+            average_orientation = orientation;
+            average_position = position;
+            average_velocity = velocity;
         });
-        socket.on('marble_info', function (serverMarble_pos,serverMarble_quat) {
 
-            marble_info_pos = serverMarble_pos;
-            marble_info_quat = serverMarble_quat;
+        /*socket.on('update_gyro', function (new_phone) {
+            update(new_phone);
+
         });
-        socket.on('server_boxes', function (serverBoxes_pos, serverBoxes_scale) {
-            
-            createBoxes(serverBoxes_pos,serverBoxes_scale);
-        });
-        socket.on('new_marble', function (xscale) {
-            //console.log("HELLOS??DF???");
-            myMarble = createMarbleOnly(scene, 1, 0, 0, 3);
-            //createMarbleOnly(scene, 4, 4, 4, 4);
-        });
-        socket.on('pivot_info', function (pivot_rot) {
-            //console.log("HELLOS??DF???");
-            pivot_info = pivot_rot;
-            //createMarbleOnly(scene, 4, 4, 4, 4);
-        });
-        
-        
+        */
 
 
 
@@ -238,6 +306,9 @@
                 this.x = controller.x
                 this.y = controller.y
                 this.z = controller.z
+                this.ball_pos = null;
+                this.velocity = null;
+                this.enabled = gyro_enabled;
             }
 
             //We will call this function recursively from script.  It will return the device orientation data.
@@ -246,7 +317,10 @@
                 gyroObject.x = controller.x
                 gyroObject.y = controller.y
                 gyroObject.z = controller.z
-                socket.emit('gyro_update', this.num_id, this.x, this.y, this.z);
+                gyroObject.ball_pos = marble0[1].position;
+                gyroObject.velocity = marble0[0].velocity;
+                gyroObject.enabled = gyro_enabled;
+                socket.emit('gyro_update', this.num_id, this.x, this.y, this.z,this.ball_pos,this.enabled,this.velocity);
             }
 
 
@@ -267,12 +341,7 @@
         //camera.position.set(0, 5, 10);
         //camera.rotation.set(-0.2, 0, 0);
 
-        function createBoxes(serverBoxes_pos,serverBoxes_scale) {
-            for (let i = 0; i < serverBoxes_pos.length; i++) {
-                console.log(serverBoxes_scale[i]);
-                createWall2(scene, serverBoxes_pos[i], serverBoxes_scale[i]);
-            }
-        }
+
 
 
         function createCube(scene, xscale, yscale, zscale, xpos, ypos, zpos) {
@@ -294,24 +363,6 @@
             //return cube1;
 
         }
-        function createWall2(scene, pos,scale) {
-
-            const geometry = new THREE.BoxGeometry(scale.x,scale.y,scale.z);
-
-
-            const texture = new THREE.TextureLoader().load("textures/brick.png");
-            texture.wrapS = THREE.RepeatWrapping;
-            texture.wrapT = THREE.RepeatWrapping;
-
-
-            const material = new THREE.MeshBasicMaterial({ map: texture });
-
-            const cube1 = new THREE.Mesh(geometry, material);
-            cube1.position.set(pos.x,pos.y,pos.z);
-            pivot.add(cube1);
-            //scene.add(cube1);
-
-        }
         function createWall(scene, xscale, yscale, zscale, xpos, ypos, zpos) {
 
             const geometry = new THREE.BoxGeometry(xscale, yscale, zscale);
@@ -330,25 +381,6 @@
             //scene.add(cube1);
 
         }
-        function createMarbleOnly(scene, xscale, xpos, ypos, zpos) {
-
-            const geometry = new THREE.SphereGeometry(xscale);
-
-
-            const texture = new THREE.TextureLoader().load("textures/dirt.png");
-            texture.wrapS = THREE.RepeatWrapping;
-            texture.wrapT = THREE.RepeatWrapping;
-
-
-            const material = new THREE.MeshBasicMaterial({ map: texture });
-
-            const sphere1 = new THREE.Mesh(geometry, material);
-            sphere1.position.set(xpos, ypos, zpos);
-            //pivot.add(cube1);
-            scene.add(sphere1);
-            return sphere1;
-
-        }
         function createMarble(scene, world, xscale, yscale, zscale, xpos, ypos, zpos) {
 
             const geometry = new THREE.SphereGeometry(xscale);
@@ -358,7 +390,6 @@
             const material = new THREE.MeshBasicMaterial({ map: texture });
 
             const sphere1 = new THREE.Mesh(geometry, material);
-            sphere1.useQuaternion = true;
             sphere1.position.set(xpos, ypos, zpos);
             scene.add(sphere1);
 
@@ -382,7 +413,6 @@
             const material = new THREE.MeshBasicMaterial({ map: texture });
 
             const box1 = new THREE.Mesh(geometry, material);
-            box1.useQuaternion = true;
             box1.position.set(xpos, ypos, zpos);
             box1.rotation.x = 0.2
             scene.add(box1);
@@ -409,7 +439,6 @@
             const material = new THREE.MeshBasicMaterial({ map: texture });
 
             const box1 = new THREE.Mesh(geometry, material);
-            box1.useQuaternion = true;
             box1.position.set(xpos, ypos, zpos);
             box1.rotation.x = 0.1
             pivot.add(box1);
@@ -457,66 +486,32 @@
 
         //Initialize the Gyroscope object for the mobile user
 
-        let myBoxes = [];
+        let gyro_enabled = true;
+
         let threejsBodies = [];
         let cannonjsBodies = [];
 
         let mazeMeshBodies = [];
         let mazePhysicsBodies = [];
-       
+
+        let average_position = [0, 0, 0];
         let average_orientation = [0, 0, 0];
-        let pivot_pos = [0, 0, 0];
-        let pivot_quat = [0, 0, 0, 1];
-        let marble_info_pos = null;
-        let marble_info_quat = null;
+        let average_velocity = [0, 0, 0];
+
         let gyroObject = new Gyroscope(0);
         let display = new displayCanvas();
         let frameCounter = 0;
         const pivot = new THREE.Group();
         let clock = new THREE.Clock();
         let floorobject = null;
-        let pivot_info = 0;
 
-        //const cube = createCube(scene, 1, 1, 1, 0, 0, 0);//cobble block
-
-        //createFloor(scene, 6, 1, 6, 0.5, -1, 0.5);
-        //back wall
-        /*
-         * createWall(scene, 1, 1, 1, 2, 0, -2);
-        createWall(scene, 1, 1, 1, 1, 0, -2);
-        createWall(scene, 1, 1, 1, 0, 0, -2);
-        createWall(scene, 1, 1, 1, -1, 0, -2);
-
-
-
-        //right wall
-        createWall(scene, 1, 1, 1, 3, 0, 3);
-        createWall(scene, 1, 1, 1, 3, 0, 2);
-        createWall(scene, 1, 1, 1, 3, 0, 1);
-        createWall(scene, 1, 1, 1, 3, 0, 0);
-        createWall(scene, 1, 1, 1, 3, 0, -1);
-        createWall(scene, 1, 1, 1, 3, 0, -2);
-
-
-        //left wall
-        createWall(scene, 1, 1, 1, -2, 0, 3);
-        createWall(scene, 1, 1, 1, -2, 0, 2);
-        createWall(scene, 1, 1, 1, -2, 0, 1);
-        createWall(scene, 1, 1, 1, -2, 0, 0);
-        createWall(scene, 1, 1, 1, -2, 0, -1);
-        createWall(scene, 1, 1, 1, -2, 0, -2);
-
-        //front wall
-        createWall(scene, 1, 1, 1, -1, 0, 3);
-        createWall(scene, 1, 1, 1, 0, 0, 3);
-        createWall(scene, 1, 1, 1, 1, 0, 3);
-        createWall(scene, 1, 1, 1, 2, 0, 3);
-        */
+    
+        
         //CANNOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOON
 
         // Setup our world
-        //var world = new CANNON.World();
-        //world.gravity.set(0, 0, -9.82); // m/s²
+        var world = new CANNON.World();
+        world.gravity.set(0, 0, -9.82); // m/s²
 
         // Create a sphere
         /*var radius = 1; // m
@@ -540,14 +535,12 @@
         var groundShape = new CANNON.Plane();
         groundBody.addShape(groundShape);
         world.addBody(groundBody);
-        
+        */
         var fixedTimeStep = 1.0 / 60.0; // seconds
         var maxSubSteps = 3;
-        */
-        // Start the simulation loop
 
-        /*
-         * var lastTime;
+        // Start the simulation loop
+        var lastTime;
         (function simloop(time) {
             requestAnimationFrame(simloop);
             if (lastTime !== undefined) {
@@ -564,23 +557,14 @@
 
             lastTime = time;
         })();
-
-        */
-        function copyCoords(mesh, body_pos,body_quat) {
-            mesh.position.x = body_pos.x;
-            mesh.position.y = body_pos.y;
-            mesh.position.z = body_pos.z;
-            mesh.quaternion.x = body_quat.x;
-            mesh.quaternion.y = body_quat.y;
-            mesh.quaternion.z = body_quat.z;
-            mesh.quaternion.w = body_quat.w;
-        }
-        function copyRot(mesh, body_quat) {
-
-            mesh.quaternion.x = body_quat.x;
-            mesh.quaternion.y = body_quat.y;
-            mesh.quaternion.z = body_quat.z;
-            mesh.quaternion.w = body_quat.w;
+        function copyCoords(mesh, body) {
+            mesh.position.x = body.position.x;
+            mesh.position.y = body.position.y;
+            mesh.position.z = body.position.z;
+            mesh.quaternion.x = body.quaternion.x;
+            mesh.quaternion.y = body.quaternion.y;
+            mesh.quaternion.z = body.quaternion.z;
+            mesh.quaternion.w = body.quaternion.w;
         }
 
 
@@ -589,26 +573,22 @@
         //createBox(scene, world, 5, 5, 1, 0, 0, 0);
 
 
-        //let marble0 = createMarble(scene, world, 1, 1, 1, 0, 0, 3);
+        let marble0 = createMarble(scene, world, 1, 1, 1, 0, 0, 3);
         //floor0 = createBox(scene, 4, 4, 4, 0, 0, 0);
         //CANOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOON
 
 
-        /*body = new CANNON.Body({
+        body = new CANNON.Body({
             mass: 0
         });
-        
-        createWall(scene, 10, 10, 1, 0, 0, 0);
-        createWall(scene, 1, 10, 1, 5, 0, 1);
-        createWall(scene, 1, 10, 1, -5, 0, 1);
-        */
-        var myMarble = null;
-        //createBoxes(myBoxes);
-        //world.addBody(body);
+        createBoxShape(scene, world, body, 10, 10, 1, 0, 0, 0);
+        createBoxShape(scene, world, body, 1, 10, 1, 5, 0, 1);
+        createBoxShape(scene, world, body, 1, 10, 1, -5, 0, 1);
+        world.addBody(body);
         //var mesh2 = new THREE.BoxGeometry(singleGeometry);
         scene.add(pivot);
 
-        //createMarbleOnly(scene, 2, 0, 0, 1);
+
 
 
         //This is the recursive function that will keep updating the gyroscope and display canvas
@@ -618,19 +598,26 @@
             frameCounter++;
 
             //console.log(cube.rotation.x);
-            //copyCoords(myMarble, marble_info);
-            
-            if (myMarble != null && marble_info_pos != null && marble_info_quat != null) {
-                copyCoords(myMarble, marble_info_pos, marble_info_quat);
-            }
-            copyRot(pivot, pivot_info);
-            console.log(pivot.quaternion);
+            //console.log("orient: "+average_orientation);
+            //console.log("pos: "+average_position);
+            //console.log(marble0[0].velocity);
 
-            //camera.position.x = marble0[0].position.x;
-            //camera.position.y = marble0[0].position.y;
+            //console.log(pivot.rotation.x);
+            if (frameCounter % 17 == 0) {
+                marble0[0].position.x = average_position[0];
+                marble0[0].position.y = average_position[1];
+                marble0[0].position.z = average_position[2];
+
+                marble0[0].velocity.x = average_velocity[0];
+                marble0[0].velocity.y = average_velocity[1];
+                marble0[0].velocity.z = average_velocity[2];
+
+            }
+
+            
             pivot.rotation.x = degrees_to_radians(average_orientation[1]);
             pivot.rotation.y = degrees_to_radians(average_orientation[2]);
-            //pivot.rotation.x -= 0.001
+            //pivot.rotation.y -= 0.001
 
 
             renderer.render(scene, camera);

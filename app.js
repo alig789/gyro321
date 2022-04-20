@@ -3,7 +3,6 @@ const app = express();
 const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
-const CANNON  = require("./public/cannon.min.js");
 const io = new Server(server);
 
 
@@ -18,69 +17,22 @@ var clients = [];
 var client_count = 0;
 var index = 0;
 
-var world = new CANNON.World();
-world.gravity.set(0, 0, -9.82); // m/s²
-
-var fixedTimeStep = 1.0 / 60.0; // seconds
-var maxSubSteps = 3;
-var serverMarble = null;
-var serverBoxes_pos = [];
-var serverBoxes_scale = [];
-
-
-startSimulation();
-
-function startSimulation() {
-    body = new CANNON.Body({
-            mass: 0
-    });
-    serverMarble = createMarble(world, 1, 1, 1, 0, 0, 10);
-    createBoxShape(world, body, 10, 10, 1, 0, 0, 0);
-    createBoxShape(world, body, 1, 10, 1, 5, 0, 1);
-    createBoxShape(world, body, 1, 10, 1, -5, 0, 1);
-    
-    world.addBody(body);
-        
-}
-//GAME LOGIC
-
-const hrtimeMs = function () {
-    let time = process.hrtime()
-    return time[0] * 1000 + time[1] / 1000000
-}
-
-const TICK_RATE = 20
-let tick = 0
-let previous = hrtimeMs()
-let tickLengthMs = 1000 / TICK_RATE
-
-const loop = () => {
-    setTimeout(loop, tickLengthMs)
-    let now = hrtimeMs()
-    let delta = (now - previous) / 1000
-    world.step(fixedTimeStep, delta, maxSubSteps);
-    io.emit('marble_info', serverMarble.position, serverMarble.quaternion)
-    io.emit('pivot_info', body.quaternion);
-    body.quaternion.y+=0.001
-   
-    previous = now
-    tick++
-}
-
-loop()
-
-//GAME LOGIC END
+var average_orientation = [0, 0, 0];
+var average_position = [0, 0, 3];
+var average_velocity = [0, 0, 0];
 
 io.on('connection', (socket) => {
 
-    let new_phone = new phoneGyro(socket.id, index++);
+    let new_phone = new phoneGyro(socket.id);
+    
+
+    addClient(new_phone);
+    io.emit('assign_id', new_phone.id);
+
     console.log(`user ${new_phone.num_id} connected`);
-    clients.push(new_phone)
     client_count++;
     io.to(new_phone.socket_id).emit('new_connect', new_phone.num_id);
     io.emit('update_count', client_count);
-    io.emit('server_boxes', serverBoxes_pos, serverBoxes_scale);
-    io.emit('new_marble', serverMarble.radius);
 
 
 
@@ -88,7 +40,8 @@ io.on('connection', (socket) => {
         console.log(`user ${new_phone.num_id} disconnected`);
         clients[new_phone.num_id] = null;
         client_count--;
-        io.emit('update_count', client_count);
+        
+        io.emit('update_count', client_count,average_position);
 
     
     });
@@ -99,15 +52,18 @@ io.on('connection', (socket) => {
         clients[id].gyroData = gyroObject;
 
     });
-    socket.on('gyro_update', (id, x,y,z) => {
+    socket.on('gyro_update', (id, x,y,z,ball_pos,gyro_enabled,velocity) => {
         //console.log('recieved gyro update' + id);
         if (clients[id] != null) {
             if (clients[id].gyroData != null) {
                 clients[id].gyroData.x = x;
                 clients[id].gyroData.y = y;
                 clients[id].gyroData.z = z;
-                io.emit('average_orientation', averageOrientation(clients))
-                
+                clients[id].ball_pos = ball_pos;
+                clients[id].gyroData.enabled = gyro_enabled;
+                clients[id].velocity = velocity;
+                averageOrientation(clients);
+                io.emit('average_orientation', average_orientation,average_position,average_velocity)
             }
         }
 
@@ -116,11 +72,23 @@ io.on('connection', (socket) => {
     socket.on('chat message', (msg) => {
         console.log('message: ' + msg);
         console.log(clients);
-        console.log('Average orientation: ' + averageOrientation(clients));
+        console.log('Average orientation: ' + average_orientation);
+        console.log('Average position: ' + average_position);
         console.log(`connected clients = ${client_count}`)
 		io.emit('chat message', msg);
 		
     });
+    socket.on('reset', () => {
+        average_position = [0, 0, 3];
+        average_velocity = [0, 0, 0];
+        io.emit('client_reset')
+        //average_position = [0, 0, 3];
+        //io.emit('average_orientation', average_orientation, average_position);
+        //average_orientation = [0, 0, 0];
+        //io.emit('chat message', msg);
+
+    });
+
     socket.on('orientation', (id) => {
         console.log('message: orientation '+id);
 
@@ -146,9 +114,27 @@ server.listen(port, () => {
 class phoneGyro {
     constructor(socket_id, num_id, gyroData) {
         this.socket_id = socket_id;
-        this.num_id = num_id;
-        this.gyroData = gyroData;
+        this.num_id = null;
+        this.gyroData = null;
+        this.ball_pos = null;
+        this.velocity = null;
+        
     }
+}
+
+function addClient(new_phone) {
+    console.log(clients.length);
+
+    for (let i = 0; i < clients.length; i++) {
+        if (clients[i] == null) {
+            clients[i] = new_phone;
+            new_phone.num_id = i;
+            return;
+        }
+    }
+    new_phone.num_id = clients.length;
+    clients.push(new_phone);
+    return;
 }
 
 function averageOrientation(phone_array) {
@@ -157,62 +143,47 @@ function averageOrientation(phone_array) {
     big_x = 0;
     big_y = 0;
     big_z = 0;
+
+    pos_x = 0;
+    pos_y = 0;
+    pos_z = 0;
+
+    vel_x = 0;
+    vel_y = 0;
+    vel_z = 0;
+
     for (i = 0; i < phone_array.length; i++) {
         if (phone_array[i] == null) {
             continue;
         }
         else {
-            if (phone_array[i].gyroData != null) {
+            if (phone_array[i].gyroData != null && phone_array[i].ball_pos != null && phone_array[i].velocity != null && phone_array[i].gyroData.enabled == true) {
                 big_x += phone_array[i].gyroData.x;
                 big_y += phone_array[i].gyroData.y;
                 big_z += phone_array[i].gyroData.z;
+
+                pos_x += phone_array[i].ball_pos.x;
+                pos_y += phone_array[i].ball_pos.y;
+                pos_z += phone_array[i].ball_pos.z;
+
+                vel_x += phone_array[i].velocity.x;
+                vel_y += phone_array[i].velocity.y;
+                vel_z += phone_array[i].velocity.z;
                 num_phones++;
             }
         }
     }
     if (num_phones > 0) {
-        return [big_x / num_phones, big_y / num_phones, big_z / num_phones];
+        average_orientation = [big_x / num_phones, big_y / num_phones, big_z / num_phones];
+        average_position = [pos_x / num_phones, pos_y / num_phones, pos_z / num_phones];
+        average_velocity = [vel_x / num_phones, vel_y / num_phones, vel_z / num_phones];
     }
     else {
-        return null;
+        average_orientation = [0, 0, 0];
+        average_velocity = [0, 0, 0];
     }
-}
-
-
-function createMarble(world, xscale, yscale, zscale, xpos, ypos, zpos) {
-
-    var sphereBody = new CANNON.Body({
-        mass: 5, // kg
-        position: new CANNON.Vec3(xpos, ypos, zpos), // m
-        shape: new CANNON.Sphere(xscale)
-    });
-    world.addBody(sphereBody);
     
-    //threejsBodies.push(sphere1);
-    //cannonjsBodies.push(sphereBody);
-    return sphereBody;
-
 }
-
-function createBoxShape(world, body, xscale, yscale, zscale, xpos, ypos, zpos) {
-
-
-    var scale = new CANNON.Vec3(xscale , yscale , zscale); //for some reason cannon uses half scale of threejs
-    var scale2 = new CANNON.Vec3(xscale / 2, yscale / 2, zscale / 2);
-    var pos = new CANNON.Vec3(xpos, ypos, zpos);
-
-    boxBody = new CANNON.Box(scale2);
-    body.addShape(boxBody, pos);
-
-    serverBoxes_pos.push(pos);
-    serverBoxes_scale.push(scale);
-
-    //cannonjsBodies.push(boxBody);
-    return;
-
-
-}
-
 
 //First we will add the deviceorientation events, and later we will intialize them into Javascript variables.
 
