@@ -102,8 +102,8 @@
     <div id="info">
         <h1 id="id01">ID: N/A</h1>
         <h1 id="id02">Connected Users: N/A</h1>
-        <button id="input">iPhone users click here!</button>
-        <button id="input2">RESET</button>
+        <button id="iphone_button">iPhone users click here!</button>
+        <button id="reset_button">RESET</button>
 
         <p></p>
         <label class="switch">
@@ -116,112 +116,84 @@
     <canvas id="canvas1"></canvas>
 
 
-    <!-- <script type="text/javascript" src="display.js"></script>-->
-    <!--<script type="text/javascript" src="gyroscope.js"></script>-->
-    <!--<script type="text/javascript" src="script.js"></script>-->
+
     <script type="text/javascript" src="/socket.io/socket.io.js"></script>
     <script type="text/javascript" src="three.js"></script>
-
     <script src="cannon.min.js"></script>
-
-
-
-
-
-
-
-
 
 
 
     <script>
 
+        var socket = io(); //so we can talk to the server
+        var iphone_button = document.getElementById('iphone_button');
+
+        var slider = document.getElementById('slider'); //sider to enable sending input or not
 
 
-
-        var socket = io();
-
-        var messages = document.getElementById('messages');
-        var form = document.getElementById('form');
-        var input = document.getElementById('input');
-        var slider = document.getElementById('slider');
-
-
-        input.addEventListener('click', function (e) {
-            askPermission()
+        iphone_button.addEventListener('click', function (e) {
+            askPermission() //ask permission for gyro info
         });
 
-        slider.addEventListener('change', function () {
+        slider.addEventListener('change', function () { //Check if the slider is modified
             if (this.checked) {
-                gyro_enabled = true;
+                gyro_enabled = true; //enabled by default
             }
             else {
                 gyro_enabled = false;
             }
         });
 
-        input2.addEventListener('click', function (e) {
-
+        reset_button.addEventListener('click', function (e) {
             
-            
-            
-            socket.emit('chat message', "stuff");
-            socket.emit('reset');
+            socket.emit('chat message', "stuff"); //debug method, print client info into server log
+            socket.emit('reset'); //tell the server to tell all clients to reset
 
         });
 
-        socket.on('client_reset', function () {
-            world.remove(marble0[0]);
-            scene.remove(marble0[1]);
-            marble0 = createMarble(scene, world, 1, 1, 1, 0, 0, 3);
+        socket.on('client_reset', function () { //server wants us to reset
+            world.remove(marble0[0]); //delete marble physics body
+            scene.remove(marble0[1]); //delete marble 3d body
+            marble0 = createMarble(scene, world, 1, 1, 1, 0, 0, 3); //make a new marble
         });
 
-        socket.on('assign_id', function (id) {
+        socket.on('assign_id', function (id) { //get the proper id assignment from the server
 
             gyroObject.id = id;
 
         });
 
-        socket.on('new_connect', function (id,position) {
+        socket.on('new_connect', function (id,position) { //will be sent to us when server sees we connected
 
-            const element = document.getElementById("id01");
+            const element = document.getElementById("id01"); //Display ID across the top
             element.innerHTML = "ID: " + id;
 
 
             gyroObject.num_id = id
             socket.emit('created_gyro', gyroObject, id);
-            average_position = position
+            average_position = position //Set the position the ball was before we connected
 
             runGyroscope();
 
         });
 
 
-        socket.on('update_count', function (users) {
+        socket.on('update_count', function (users) { //whenever a new user joins, update the connected clients counter
             const element2 = document.getElementById("id02");
             element2.innerHTML = "Connected Users: " + users;
         });
 
-        socket.on('average_orientation', function (orientation,position,velocity) {
+        socket.on('average_orientation', function (orientation,position,velocity) {//IMPORTANT marble info
 
             average_orientation = orientation;
             average_position = position;
             average_velocity = velocity;
         });
 
-        /*socket.on('update_gyro', function (new_phone) {
-            update(new_phone);
 
-        });
-        */
+        screen.orientation.lock("portrait"); //only works in fullscreen? need to fix this
 
-
-
-
-
-        screen.orientation.lock("portrait");
-
-        const canvas = document.getElementById('canvas1');
+        const canvas = document.getElementById('canvas1');//debug info
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
@@ -234,18 +206,7 @@
             }
             update() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                //ctx.fillStyle = "white";
-                //ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                //Make it change colors while you tilt the x, y, z
-                /*ctx.fillStyle = `rgb(
-                        ${Math.floor(255 - Math.abs(gyroObject.x / 2))},
-                        ${Math.floor(255 - Math.abs(gyroObject.y))},
-                        ${Math.floor(255 - Math.abs(gyroObject.z))}`;
-                */
-                //ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                //ctx.fillStyle = "gray";
                 ctx.font = "20px Georgia";
                 ctx.fillText("Your info:", 10, 20);
                 ctx.fillText("x: " + parseInt(gyroObject.x), 10, 50);
@@ -263,7 +224,6 @@
 
 
         }
-
 
         function askPermission() {   //askPermission is an HTML requirement of iOS
             DeviceOrientationEvent.requestPermission() //This asks for permission (iOS requirement)
@@ -283,11 +243,6 @@
 
             });
         }
-
-
-
-        //This is where we are temporarily storing the values.  Each Gyroscope client/Object made from script.js will have it's own x, y, z.
-
 
         //This will be the main Gyroscope object, we can initialize it in the main (script.js) if we've confirmed a mobile device.
         //That object can then use the functions within the class below.
@@ -320,243 +275,132 @@
                 gyroObject.ball_pos = marble0[1].position;
                 gyroObject.velocity = marble0[0].velocity;
                 gyroObject.enabled = gyro_enabled;
-                socket.emit('gyro_update', this.num_id, this.x, this.y, this.z,this.ball_pos,this.enabled,this.velocity);
+                socket.emit('gyro_update', this.num_id, this.x, this.y, this.z, this.ball_pos, this.enabled, this.velocity);
+                //send the needed information to the server
             }
 
-
-
-            //Now that we have the X,Y,Z values, we need to send the data to the server and the client webpage will be finished.
-
-
         }
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-        const renderer = new THREE.WebGLRenderer();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
+        //THREE.js is used for the 3D Objects. This library is responsible for RENDERING what is on the screen
+        //CANNON.js is used for physics bodies. This library is responsible for CALCULATING where things should be.
 
-        scene.background = new THREE.Color(0x707070);
-        camera.position.z = 10;
-        //camera.position.set(0, 5, 10);
-        //camera.rotation.set(-0.2, 0, 0);
+        //Three.js objects copy position/orientation info from cannon.js objects
 
 
 
 
-        function createCube(scene, xscale, yscale, zscale, xpos, ypos, zpos) {
+        function createMarble(scene, world, xscale, yscale, zscale, xpos, ypos, zpos) { //create our marble. We only need 1
 
-            const geometry = new THREE.BoxGeometry(xscale, yscale, zscale);
-
-
-            const texture = new THREE.TextureLoader().load("textures/cobble.png");
-            texture.wrapS = THREE.RepeatWrapping;
-            texture.wrapT = THREE.RepeatWrapping;
-
-
-            const material = new THREE.MeshBasicMaterial({ map: texture });
-
-            const cube1 = new THREE.Mesh(geometry, material);
-            cube1.position.set(xpos, ypos, zpos);
-            pivot.add(cube1);
-            //scene.add(cube1);
-            //return cube1;
-
-        }
-        function createWall(scene, xscale, yscale, zscale, xpos, ypos, zpos) {
-
-            const geometry = new THREE.BoxGeometry(xscale, yscale, zscale);
-
-
-            const texture = new THREE.TextureLoader().load("textures/brick.png");
-            texture.wrapS = THREE.RepeatWrapping;
-            texture.wrapT = THREE.RepeatWrapping;
-
-
-            const material = new THREE.MeshBasicMaterial({ map: texture });
-
-            const cube1 = new THREE.Mesh(geometry, material);
-            cube1.position.set(xpos, ypos, zpos);
-            pivot.add(cube1);
-            //scene.add(cube1);
-
-        }
-        function createMarble(scene, world, xscale, yscale, zscale, xpos, ypos, zpos) {
-
-            const geometry = new THREE.SphereGeometry(xscale);
-            const texture = new THREE.TextureLoader().load("textures/dirt.png");
+            const geometry = new THREE.SphereGeometry(xscale); //radius
+            const texture = new THREE.TextureLoader().load("textures/dirt.png"); //temp texture
             texture.wrapS = THREE.RepeatWrapping;
             texture.wrapT = THREE.RepeatWrapping;
             const material = new THREE.MeshBasicMaterial({ map: texture });
 
             const sphere1 = new THREE.Mesh(geometry, material);
             sphere1.position.set(xpos, ypos, zpos);
-            scene.add(sphere1);
+            scene.add(sphere1); //add 3D model to scene
 
-            var sphereBody = new CANNON.Body({
+            var sphereBody = new CANNON.Body({ //create physics body
                 mass: 5, // kg
                 position: new CANNON.Vec3(xpos, ypos, zpos), // m
-                shape: new CANNON.Sphere(xscale)
+                shape: new CANNON.Sphere(xscale) //radius
             });
-            world.addBody(sphereBody);
-            //threejsBodies.push(sphere1);
-            //cannonjsBodies.push(sphereBody);
-            return [sphereBody, sphere1];
+            world.addBody(sphereBody); //Add PHYSICS body to world
+
+            return [sphereBody, sphere1]; //return our physicsbody and 3d body together
             
         }
-        function createBox(scene,world, xscale, yscale, zscale, xpos, ypos, zpos) {
-
-            const geometry = new THREE.BoxGeometry(xscale,yscale,zscale);
-            const texture = new THREE.TextureLoader().load("textures/wood.png");
-            texture.wrapS = THREE.RepeatWrapping;
-            texture.wrapT = THREE.RepeatWrapping;
-            const material = new THREE.MeshBasicMaterial({ map: texture });
-
-            const box1 = new THREE.Mesh(geometry, material);
-            box1.position.set(xpos, ypos, zpos);
-            box1.rotation.x = 0.2
-            scene.add(box1);
-
-            var boxBody = new CANNON.Body({
-                mass: 0, // kg
-                position: new CANNON.Vec3(xpos, ypos, zpos), // m
-                shape: new CANNON.Box(new CANNON.Vec3(xscale/2, yscale/2, zscale/2)),
-                quaternion: box1.quaternion
-            });
-            world.addBody(boxBody);
-            threejsBodies.push(box1);
-            cannonjsBodies.push(boxBody);
-            return;
-
-
-        }
+        //createBoxShape will create both a THREE.js object and add it to our maze physics object "pivot"
         function createBoxShape(scene, world,body, xscale, yscale, zscale, xpos, ypos, zpos) {
 
-            const geometry = new THREE.BoxGeometry(xscale, yscale, zscale);
-            const texture = new THREE.TextureLoader().load("textures/wood.png");
+            const geometry = new THREE.BoxGeometry(xscale, yscale, zscale); //create 3d object
+            const texture = new THREE.TextureLoader().load("textures/wood.png"); //temporary textures
             texture.wrapS = THREE.RepeatWrapping;
             texture.wrapT = THREE.RepeatWrapping;
             const material = new THREE.MeshBasicMaterial({ map: texture });
 
             const box1 = new THREE.Mesh(geometry, material);
             box1.position.set(xpos, ypos, zpos);
-            box1.rotation.x = 0.1
-            pivot.add(box1);
+            
+            pivot.add(box1); //
 
             boxBody = new CANNON.Box(new CANNON.Vec3(xscale/2, yscale/2, zscale/2));
             body.addShape(boxBody, new CANNON.Vec3(xpos, ypos, zpos));
             
 
-            mazeMeshBodies.push(box1);
-            //cannonjsBodies.push(boxBody);
+
             return;
 
-
-        }
-        function createFloor(scene, xscale, yscale, zscale, xpos, ypos, zpos) {
-
-
-            const geometry = new THREE.BoxGeometry(xscale, yscale, zscale);
-
-            const texture = new THREE.TextureLoader().load("textures/wood.png");
-            texture.wrapS = THREE.RepeatWrapping;
-            texture.wrapT = THREE.RepeatWrapping;
-
-            const material = new THREE.MeshBasicMaterial({ map: texture });
-
-            const cube1 = new THREE.Mesh(geometry, material);
-            cube1.position.set(xpos, ypos, zpos);
-            pivot.add(cube1);
-            //scene.add(cube1);
-
-
         }
 
-        //AMOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
+
+
         window.addEventListener('DOMContentLoaded', async () => {
-            
+            //do stuff 
         });
-        //AMOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 
-
-        function degrees_to_radians(degrees) {
+        function degrees_to_radians(degrees) { //orientation is stored in degrees
             var pi = Math.PI;
             return degrees * (pi / 180);
         }
 
         //Initialize the Gyroscope object for the mobile user
 
-        let gyro_enabled = true;
 
-        let threejsBodies = [];
-        let cannonjsBodies = [];
+        const scene = new THREE.Scene(); //create our 3D scene
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000); //create a camera 
+        camera.position.z = 10;
 
-        let mazeMeshBodies = [];
-        let mazePhysicsBodies = [];
+
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        scene.background = new THREE.Color(0x707070); //we can get a skybox or change the color
+
+
+
+        let gyro_enabled = true; //Slider is on by default, contributing to average
 
         let average_position = [0, 0, 0];
         let average_orientation = [0, 0, 0];
         let average_velocity = [0, 0, 0];
 
-        let gyroObject = new Gyroscope(0);
-        let display = new displayCanvas();
+        let gyroObject = new Gyroscope(0);//create gyroObject
+
+        let display = new displayCanvas(); //debug code
+
         let frameCounter = 0;
-        const pivot = new THREE.Group();
-        let clock = new THREE.Clock();
-        let floorobject = null;
 
-    
-        
-        //CANNOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOON
+        const pivot = new THREE.Group(); //our MAZE 3d objects
 
-        // Setup our world
+
+
+        // Setup our PHYSICS world
         var world = new CANNON.World();
         world.gravity.set(0, 0, -9.82); // m/s²
 
-        // Create a sphere
-        /*var radius = 1; // m
-        var sphereBody = new CANNON.Body({
-            mass: 5, // kg
-            position: new CANNON.Vec3(0, 0, 10), // m
-            shape: new CANNON.Sphere(radius)
-        });
-        var floorBody = new CANNON.Body({
-            mass: 0, // kg
-            position: new CANNON.Vec3(0, 0, 0), // m
-            shape: new CANNON.Box(new CANNON.Vec3(4, 4, 4))
-        });
-        world.addBody(sphereBody);
-        world.addBody(floorBody);
-        
-        // Create a plane
-        var groundBody = new CANNON.Body({
-            mass: 0 // mass == 0 makes the body static
-        });
-        var groundShape = new CANNON.Plane();
-        groundBody.addShape(groundShape);
-        world.addBody(groundBody);
-        */
+
         var fixedTimeStep = 1.0 / 60.0; // seconds
         var maxSubSteps = 3;
 
-        // Start the simulation loop
+        // Start the simulation PHYSICS loop
         var lastTime;
         (function simloop(time) {
             requestAnimationFrame(simloop);
             if (lastTime !== undefined) {
                 var dt = (time - lastTime) / 1000;
                 world.step(fixedTimeStep, dt, maxSubSteps);
-                copyCoords(marble0[1], marble0[0]);
-                copyCoords(body, pivot);
-                //copyCoords(floor0, floorBody);
-            }
-            if (cannonjsBodies.length != 0) { 
-                //body.quaternion.y += 0.001;
+                copyCoords(marble0[1], marble0[0]); //copy calculated physics body attributes to 
+                copyCoords(body, pivot); 
 
             }
 
             lastTime = time;
         })();
+
+        //helper method to copy CANNON physics body data to 3D THREE object
         function copyCoords(mesh, body) {
             mesh.position.x = body.position.x;
             mesh.position.y = body.position.y;
@@ -567,26 +411,19 @@
             mesh.quaternion.w = body.quaternion.w;
         }
 
+        //MAIN CODE:
 
+        let marble0 = createMarble(scene, world, 1, 1, 1, 0, 0, 3); //create marble
 
-
-        //createBox(scene, world, 5, 5, 1, 0, 0, 0);
-
-
-        let marble0 = createMarble(scene, world, 1, 1, 1, 0, 0, 3);
-        //floor0 = createBox(scene, 4, 4, 4, 0, 0, 0);
-        //CANOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOON
-
-
-        body = new CANNON.Body({
+        body = new CANNON.Body({//create physics body for MAZE
             mass: 0
         });
-        createBoxShape(scene, world, body, 10, 10, 1, 0, 0, 0);
+        createBoxShape(scene, world, body, 10, 10, 1, 0, 0, 0);//add WALLS and FLOOR to maze
         createBoxShape(scene, world, body, 1, 10, 1, 5, 0, 1);
         createBoxShape(scene, world, body, 1, 10, 1, -5, 0, 1);
-        world.addBody(body);
-        //var mesh2 = new THREE.BoxGeometry(singleGeometry);
-        scene.add(pivot);
+
+        world.addBody(body);//add maze physics body
+        scene.add(pivot);//add maze 3d body
 
 
 
@@ -597,13 +434,7 @@
             display.update();
             frameCounter++;
 
-            //console.log(cube.rotation.x);
-            //console.log("orient: "+average_orientation);
-            //console.log("pos: "+average_position);
-            //console.log(marble0[0].velocity);
-
-            //console.log(pivot.rotation.x);
-            if (frameCounter % 7 == 0) {
+            if (frameCounter % 7 == 0) { //synchronize positions every 7 ticks
                 marble0[0].position.x = average_position[0];
                 marble0[0].position.y = average_position[1];
                 marble0[0].position.z = average_position[2];
@@ -613,12 +444,13 @@
                 marble0[0].velocity.z = average_velocity[2];
 
             }
-            camera.position.x = marble0[0].position.x 
-            camera.position.y = marble0[0].position.y 
+            camera.position.x = marble0[0].position.x //camera follows ball from above
+            camera.position.y = marble0[0].position.y
+
             
-            pivot.rotation.x = degrees_to_radians(average_orientation[1]);
+            pivot.rotation.x = degrees_to_radians(average_orientation[1]); //move the entire maze
             pivot.rotation.y = degrees_to_radians(average_orientation[2]);
-            //pivot.rotation.y -= 0.001
+
 
 
             renderer.render(scene, camera);
