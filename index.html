@@ -429,7 +429,7 @@
             display.update();
             frameCounter++;
             //console.log(average_position);
-            if (average_position != null && average_velocity != null) { //synchronize positions every 7 ticks
+            if (frameCounter % 5 == 0 && average_position != null && average_velocity != null) { //synchronize positions every 7 ticks
                 marble0[0].position.x = average_position[0];
                 marble0[0].position.y = average_position[1];
                 marble0[0].position.z = average_position[2];
