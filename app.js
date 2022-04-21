@@ -96,8 +96,6 @@ io.on('connection', (socket) => {
         clients[id].gyroData.y = 25;
         clients[id].gyroData.z = 26;
 
-
-
     });
     
 

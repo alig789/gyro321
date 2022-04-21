@@ -126,7 +126,7 @@
     <script>
 
         var socket = io(); //so we can talk to the server
-        var iphone_button = document.getElementById('iphone_button');
+       
 
         var slider = document.getElementById('slider'); //sider to enable sending input or not
 
@@ -186,7 +186,7 @@
         });
 
 
-        screen.orientation.lock("portrait"); //only works in fullscreen? need to fix this
+        //screen.orientation.lock("portrait"); //only works in fullscreen? need to fix this
 
         const canvas = document.getElementById('canvas1');//debug info
         const ctx = canvas.getContext('2d');
@@ -429,7 +429,7 @@
             display.update();
             frameCounter++;
             //console.log(average_position);
-            if (frameCounter % 7 == 0 && average_position != null && average_velocity != null) { //synchronize positions every 7 ticks
+            if (average_position != null && average_velocity != null) { //synchronize positions every 7 ticks
                 marble0[0].position.x = average_position[0];
                 marble0[0].position.y = average_position[1];
                 marble0[0].position.z = average_position[2];
