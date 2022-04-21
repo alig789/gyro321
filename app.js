@@ -13,7 +13,7 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
-var clients = [];
+var clients = [];//the array of connected clients phoneGyro ob
 var client_count = 0;
 var index = 0;
 

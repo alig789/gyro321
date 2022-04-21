@@ -157,11 +157,6 @@
             marble0 = createMarble(scene, world, 1, 1, 1, 0, 0, 3); //make a new marble
         });
 
-        socket.on('assign_id', function (id) { //get the proper id assignment from the server
-
-            gyroObject.id = id;
-
-        });
 
         socket.on('new_connect', function (id,position) { //will be sent to us when server sees we connected
 
@@ -433,8 +428,8 @@
             gyroObject.update();
             display.update();
             frameCounter++;
-
-            if (frameCounter % 7 == 0) { //synchronize positions every 7 ticks
+            //console.log(average_position);
+            if (frameCounter % 7 == 0 && average_position != null && average_velocity != null) { //synchronize positions every 7 ticks
                 marble0[0].position.x = average_position[0];
                 marble0[0].position.y = average_position[1];
                 marble0[0].position.z = average_position[2];
