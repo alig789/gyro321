@@ -102,7 +102,7 @@
     <div id="info">
         <h1 id="id01">ID: N/A</h1>
         <h1 id="id02">Connected Users: N/A</h1>
-        <button id="iphone_button" input type="button" onclick="askPermission()" name="myButton">iPhone users click here!</button>
+        <button id="iphone_button" input type="button" onclick="askPermission()" name="myButton">Connect!</button>
         <button id="reset_button">RESET</button>
 
         <p></p>
@@ -124,6 +124,15 @@
 
 
     <script>
+
+        function askPermission() {   //askPermission is an HTML requirement of iOS
+            DeviceOrientationEvent.requestPermission() //This asks for permission (iOS requirement)
+            window.addEventListener("deviceorientation", function (event) { //This listens to the phone orientation values
+                controller.x = event.alpha;
+                controller.y = event.beta;
+                controller.z = event.gamma;
+            });
+        }
 
         var socket = io(); //so we can talk to the server
        
@@ -220,25 +229,10 @@
 
         }
 
-        function askPermission() {   //askPermission is an HTML requirement of iOS
-            DeviceOrientationEvent.requestPermission() //This asks for permission (iOS requirement)
-            window.addEventListener("deviceorientation", function (event) { //This listens to the phone orientation values
-                controller.x = event.alpha;
-                controller.y = event.beta;
-                controller.z = event.gamma;
-            });
-        }
+        
 
         //Android users will have their data automatically working on page load from this one.  It can be removed, the button above should also work.
-        if (window.DeviceOrientationEvent) {
-            window.addEventListener("deviceorientation", function (event) {
-                controller.x = event.alpha;
-                controller.y = event.beta;
-                controller.z = event.gamma;
-
-            });
-        }
-
+        
         //This will be the main Gyroscope object, we can initialize it in the main (script.js) if we've confirmed a mobile device.
         //That object can then use the functions within the class below.
         const controller = {
@@ -328,8 +322,6 @@
             return;
 
         }
-
-
 
         window.addEventListener('DOMContentLoaded', async () => {
             //do stuff 
