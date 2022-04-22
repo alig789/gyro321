@@ -166,7 +166,6 @@
             marble0 = createMarble(scene, world, 1, 1, 1, 0, 0, 3); //make a new marble
         });
 
-
         socket.on('new_connect', function (id,position) { //will be sent to us when server sees we connected
 
             const element = document.getElementById("id01"); //Display ID across the top
@@ -181,7 +180,6 @@
 
         });
 
-
         socket.on('update_count', function (users) { //whenever a new user joins, update the connected clients counter
             const element2 = document.getElementById("id02");
             element2.innerHTML = "Connected Users: " + users;
@@ -193,7 +191,6 @@
             average_position = position;
             average_velocity = velocity;
         });
-
 
         //screen.orientation.lock("portrait"); //only works in fullscreen? need to fix this
 
@@ -257,7 +254,6 @@
 
             //We will call this function recursively from script.  It will return the device orientation data.
             update() {
-
                 gyroObject.x = controller.x
                 gyroObject.y = controller.y
                 gyroObject.z = controller.z
@@ -267,7 +263,6 @@
                 socket.emit('gyro_update', this.num_id, this.x, this.y, this.z, this.ball_pos, this.enabled, this.velocity);
                 //send the needed information to the server
             }
-
         }
 
         //THREE.js is used for the 3D Objects. This library is responsible for RENDERING what is on the screen
@@ -421,7 +416,7 @@
             display.update();
             frameCounter++;
             //console.log(average_position);
-            if (frameCounter % 5 == 0 && average_position != null && average_velocity != null) { //synchronize positions every 7 ticks
+            /*if (frameCounter % 5 == 0 && average_position != null && average_velocity != null) { //synchronize positions every 7 ticks
                 marble0[0].position.x = average_position[0];
                 marble0[0].position.y = average_position[1];
                 marble0[0].position.z = average_position[2];
@@ -430,7 +425,7 @@
                 marble0[0].velocity.y = average_velocity[1];
                 marble0[0].velocity.z = average_velocity[2];
 
-            }
+            }*/
             camera.position.x = marble0[0].position.x //camera follows ball from above
             camera.position.y = marble0[0].position.y
 
