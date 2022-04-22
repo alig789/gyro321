@@ -425,12 +425,23 @@
             gyroObject.update();
             display.update();
             frameCounter++;
-            //console.log(average_position);
+            //console.log(marble0[0].position);
+            if (frameCounter % 5 == 0 && average_position != null) { 
+                marble0[0].position.x = average_position.x;
+                marble0[0].position.y = average_position.y;
+                marble0[0].position.z = average_position.z;
+                //console.log(average_velocity)
+                marble0[0].velocity.x = average_velocity.x;
+                marble0[0].velocity.y = average_velocity.y;
+                marble0[0].velocity.z = average_velocity.z;
+        }
+
             /*if (frameCounter % 5 == 0 && average_position != null && average_velocity != null) { //synchronize positions every 7 ticks
                 marble0[0].position.x = average_position[0];
                 marble0[0].position.y = average_position[1];
                 marble0[0].position.z = average_position[2];
-
+            }
+                
                 marble0[0].velocity.x = average_velocity[0];
                 marble0[0].velocity.y = average_velocity[1];
                 marble0[0].velocity.z = average_velocity[2];
@@ -438,6 +449,7 @@
             }*/
             camera.position.x = marble0[0].position.x //camera follows ball from above
             camera.position.y = marble0[0].position.y
+            camera.position.z = marble0[0].position.z + 10
 
             
             pivot.rotation.x = degrees_to_radians(average_orientation[1]); //move the entire maze
