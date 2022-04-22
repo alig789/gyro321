@@ -64,7 +64,7 @@ const loop = () => {
     world.step(fixedTimeStep, delta, maxSubSteps);
 
     const euler = new CANNON.Vec3(average_orientation[0], average_orientation[1], average_orientation[2])
-    body.quaternion.setFromEuler(degrees_to_radians(euler.y), degrees_to_radians(euler.z), degrees_to_radians(euler.x), 'YZX');
+    body.quaternion.setFromEuler(degrees_to_radians(euler.y), degrees_to_radians(euler.z),0, 'XYZ');
     
     //console.log(average_orientation);
     //console.log(body.quaternion);
@@ -148,6 +148,7 @@ io.on('connection', (socket) => {
         marble0.position.x = 0;
         marble0.position.y = 0;
         marble0.position.z = 3;
+
         //io.emit('client_reset')
         //average_position = [0, 0, 3];
         //io.emit('average_orientation', average_orientation, average_position);
