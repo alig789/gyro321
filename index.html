@@ -134,6 +134,16 @@
             });
         }
 
+        //Android users will have their data automatically working on page load from this one.  It can be removed, the button above should also work.
+        if (window.DeviceOrientationEvent) {
+            window.addEventListener("deviceorientation", function (event) {
+                controller.x = event.alpha;
+                controller.y = event.beta;
+                controller.z = event.gamma;
+
+            });
+        }
+
         var socket = io(); //so we can talk to the server
        
 
