@@ -72,10 +72,7 @@ const loop = () => {
     //io.emit('marble_info', serverMarble.position, serverMarble.quaternion)
     //io.emit('pivot_info', body.quaternion);
     //average_orientation[1]=5
-    if (tick % 5 == 0) {
-        io.emit('average_orientation', average_orientation, marble0.position, marble0.velocity)
-    }
-
+    io.emit('average_orientation', average_orientation, marble0.position, marble0.velocity)
     previous = now
     tick++
 }
