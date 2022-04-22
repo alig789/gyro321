@@ -306,10 +306,10 @@
             
         }
         //createBoxShape will create both a THREE.js object and add it to our maze physics object "pivot"
-        function createBoxShape(scene, world,body, xscale, yscale, zscale, xpos, ypos, zpos) {
+        function createBoxShape(texture_choice, scene, world,body, xscale, yscale, zscale, xpos, ypos, zpos) {
 
             const geometry = new THREE.BoxGeometry(xscale, yscale, zscale); //create 3d object
-            const texture = new THREE.TextureLoader().load("textures/wood.png"); //temporary textures
+            const texture = new THREE.TextureLoader().load(`textures\\${texture_choice}.png`); //temporary textures
             texture.wrapS = THREE.RepeatWrapping;
             texture.wrapT = THREE.RepeatWrapping;
             const material = new THREE.MeshBasicMaterial({ map: texture });
@@ -405,28 +405,62 @@
         }
 
         //MAIN CODE:
-
+        //our representation of a level
         let level1 =[
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 0, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
 
 
-        let marble0 = createMarble(scene, world, 1, 1, 1, 0, 0, 3); //create marble
+        function generate_level(level) {
+            body = new CANNON.Body({//create physics body for MAZE
+                mass: 0
+            });
+            //create floor
+            for (let i = 0; i < level.length; i++) {
+                for (let j = 0; j < level[i].length; j++) {
 
+                    //if (level[i][j] == 1) {
+                    createBoxShape('cobble',scene, world, body, 1, 1, 1, i-(level.length/2), j-(level[0].length/2), 0);
+                    //}
+                }
+            }
+            
+
+            for (let i = 0; i < level.length; i++) {
+                for (let j = 0; j < level[i].length; j++) {
+
+                    if (level[i][j] == 1) {
+                        createBoxShape('wood', scene, world, body, 1, 1, 1, i - (level.length / 2), j - (level[0].length / 2), 1);
+                    }
+                }
+            }
+
+        }
+            //createBoxShape(scene,world,body,level[0].length
+
+
+
+
+        let marble0 = createMarble(scene, world, 0.5, 1, 1, 2, 2, 3); //create marble
         body = new CANNON.Body({//create physics body for MAZE
             mass: 0
         });
-        createBoxShape(scene, world, body, 10, 10, 1, 0, 0, 0);//add WALLS and FLOOR to maze
-        createBoxShape(scene, world, body, 1, 10, 1, 5, 0, 1);
-        createBoxShape(scene, world, body, 1, 10, 1, -5, 0, 1);
+
+        generate_level(level1);
+
+        //createBoxShape(scene, world, body, 10, 10, 1, 0, 0, 0);//add WALLS and FLOOR to maze
+        //createBoxShape(scene, world, body, 1, 10, 1, 5, 0, 1);
+        //createBoxShape(scene, world, body, 1, 10, 1, -5, 0, 1);
 
         world.addBody(body);//add maze physics body
         scene.add(pivot);//add maze 3d body

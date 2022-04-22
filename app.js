@@ -19,7 +19,19 @@ var client_count = 0;
 var index = 0;
 
 var average_orientation = [0, 0, 0];
-
+let level1 = [
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
 
 
 
@@ -31,14 +43,12 @@ var fixedTimeStep = 1.0 / 60.0; // seconds
 var maxSubSteps = 3;
 
 
-let marble0 = createMarble(world, 1, 1, 1, 0, 0, 3); //create marble
+let marble0 = createMarble(world, 0.5, 1, 1, 0, 0, 3); //create marble
 
 body = new CANNON.Body({//create physics body for MAZE
     mass: 0
 });
-createBoxShape(world, body, 10, 10, 1, 0, 0, 0);//add WALLS and FLOOR to maze
-createBoxShape(world, body, 1, 10, 1, 5, 0, 1);
-createBoxShape(world, body, 1, 10, 1, -5, 0, 1);
+generate_level(level1)
 
 world.addBody(body);//add maze physics body
 
@@ -176,6 +186,34 @@ io.on('connection', (socket) => {
 server.listen(port,'0.0.0.0', () => {
     console.log('listening on *:3000');
 });
+
+
+
+
+function generate_level(level) {
+    body = new CANNON.Body({//create physics body for MAZE
+        mass: 0
+    });
+    //create floor
+    for (let i = 0; i < level.length; i++) {
+        for (let j = 0; j < level[i].length; j++) {
+
+            //if (level[i][j] == 1) {
+            createBoxShape(world, body, 1, 1, 1, i - (level.length / 2), j - (level[0].length / 2), 0);
+            //}
+        }
+    }
+
+
+    for (let i = 0; i < level.length; i++) {
+        for (let j = 0; j < level[i].length; j++) {
+
+            if (level[i][j] == 1) {
+                createBoxShape(world, body, 1, 1, 1, i - (level.length / 2), j - (level[0].length / 2), 1);
+            }
+        }
+    }
+}
 
 class phoneGyro {
     constructor(socket_id, num_id, gyroData) {
