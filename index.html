@@ -341,6 +341,7 @@
 
 
         const scene = new THREE.Scene(); //create our 3D scene
+        THREE.Object3D.DefaultUp.set(0, 0, 1);
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000); //create a camera 
         camera.position.z = 10;
 
