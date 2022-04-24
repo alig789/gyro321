@@ -18,8 +18,10 @@ var clients = [];//the array of connected clients phoneGyro ob
 var client_count = 0;
 var index = 0;
 
+
 var average_orientation = [0, 0, 0];
-let level1 = [
+level_array = []
+let level0 = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
@@ -33,7 +35,25 @@ let level1 = [
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
 
+level_array.push(level0);
 
+let level1 = [
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 1, 1, 1, 1, 0, 0, 1],
+    [1, 0, 0, 1, 1, 1, 1, 0, 0, 1],
+    [1, 0, 0, 1, 1, 1, 1, 0, 0, 1],
+    [1, 0, 0, 1, 1, 1, 1, 0, 0, 1],
+    [1, 0, 0, 1, 1, 1, 1, 0, 0, 1],
+    [1, 0, 0, 1, 1, 1, 1, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
+
+level_array.push(level1);
+
+var current_level = 0;
 
 var world = new CANNON.World();
 world.gravity.set(0, 0, -9.82); // m/s²
@@ -48,7 +68,7 @@ let marble0 = createMarble(world, 0.5, 1, 1, 0, 0, 3); //create marble
 body = new CANNON.Body({//create physics body for MAZE
     mass: 0
 });
-generate_level(level1)
+generate_level(level_array[current_level]);
 
 
 
@@ -76,7 +96,7 @@ const loop = () => {
     const euler = new CANNON.Vec3(average_orientation[0], average_orientation[1], average_orientation[2])
     body.quaternion.setFromEuler(degrees_to_radians(euler.y), degrees_to_radians(euler.z),0, 'XYZ');
 
-    if (marble0.position.z < -150) {
+    if (marble0.position.z < -50) {
         reset();
     }
     //console.log(average_orientation);
@@ -107,7 +127,7 @@ io.on('connection', (socket) => {
 
     console.log(`user ${new_phone.num_id} connected`);
     client_count++;
-    io.to(new_phone.socket_id).emit('new_connect', new_phone.num_id);
+    io.to(new_phone.socket_id).emit('new_connect', new_phone.num_id,current_level);
     io.emit('update_count', client_count);
 
 
@@ -160,9 +180,13 @@ io.on('connection', (socket) => {
 
     });
 
-    socket.on('choose_level', (level) => {
-        generate_level(level);
-        socket.emit('level_selected', level);
+    socket.on('choose_level', () => {
+        current_level++;
+        if (current_level >= level_array.length) {
+            current_level = 0;
+        }
+        generate_level(level_array[current_level]);
+        socket.emit('level_selected', current_level);
 
     });
 

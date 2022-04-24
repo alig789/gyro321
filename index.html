@@ -273,6 +273,7 @@
         <!-- Overlay content -->
         <div class="overlay-content">
             <a onclick="reset()" href="#">RESET</a>
+            <a onclick="choose_level()" href="#">Skip Level</a>
             <a>
                 Show Debug Info
                 <input class="checkbox" id="debug_check" type="checkbox">
@@ -283,7 +284,7 @@
                 <input class="checkbox" id="spectator_check" type="checkbox">
                 <span></span>
             </a>
-            <a onclick="choose_level(level2)"href="#">Level Select</a>
+
 
 
 
@@ -308,11 +309,11 @@
 
     <script>
 
-        function choose_level(level) {
-            socket.emit('choose_level', level);
+        function choose_level() {
+            socket.emit('choose_level'
+            );
         }
 
-        
 
 
         function askPermission() {   //askPermission is an HTML requirement of iOS
@@ -326,7 +327,6 @@
         /* Open */
         function openNav() {
             document.getElementById("myNav").style.height = "100%";
-            console.log("OPENED MENU");
         }
 
         /* Close */
@@ -354,11 +354,13 @@
         iphone_button.addEventListener('click', function (e) {
             askPermission() //ask permission for gyro info
         });
+        var socket = io();
 
-        var socket = io(); //so we can talk to the server
+         //so we can talk to the server
 
-        socket.on('level_selected', function (level) { //server wants us to reset
-            generate_level(level);
+        socket.on('level_selected', function (level) {
+            //console.log(level);
+            generate_level(level_array[level]);
         });
         var spectator_check = document.getElementById('spectator_check'); //sider to enable sending input or not
 
@@ -402,7 +404,7 @@
             marble0 = createMarble(scene, world, 1, 1, 1, 0, 0, 3); //make a new marble
         });
 
-        socket.on('new_connect', function (id, position) { //will be sent to us when server sees we connected
+        socket.on('new_connect', function (id, current_level) { //will be sent to us when server sees we connected
 
             const element = document.getElementById("id01"); //Display ID across the top
             element.innerHTML = "ID: " + id;
@@ -410,8 +412,8 @@
 
             gyroObject.num_id = id
             socket.emit('created_gyro', gyroObject, id);
-            average_position = position //Set the position the ball was before we connected
 
+            generate_level(level_array[current_level]);
             runGyroscope();
 
         });
@@ -641,23 +643,24 @@
 
         //MAIN CODE:
         //our representation of a level
+        let level_array = [];
+        let level0 = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 2, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
+        level_array.push(level0);
         let level1 = [
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 1, 1, 1, 1, 1, 1, 0, 0, 1],
-            [1, 1, 1, 1, 1, 1, 1, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 1, 1, 1, 1, 1, 1, 1],
-            [1, 0, 0, 1, 1, 1, 1, 1, 1, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
-
-        let level2 = [
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 2, 1],
             [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
             [1, 0, 0, 1, 1, 1, 1, 0, 0, 1],
             [1, 0, 0, 1, 1, 1, 1, 0, 0, 1],
@@ -668,13 +671,16 @@
             [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
             [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
+        level_array.push(level1);
+        
         let pivot = new THREE.Group(); //our MAZE 3d objects
         let body = new CANNON.Body({//create physics body for MAZE
             mass: 0
         });
 
         function generate_level(level) {
-            
+
+
             world.remove(body);
             scene.remove(pivot);
             body = new CANNON.Body({//create physics body for MAZE
@@ -712,7 +718,7 @@
         let marble0 = createMarble(scene, world, 0.5, 1, 1, 2, 2, 3); //create marble
 
 
-        generate_level(level1);
+        //generate_level(level1);
 
         //createBoxShape(scene, world, body, 10, 10, 1, 0, 0, 0);//add WALLS and FLOOR to maze
         //createBoxShape(scene, world, body, 1, 10, 1, 5, 0, 1);
