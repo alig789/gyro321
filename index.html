@@ -9,54 +9,480 @@
     <title>Gyroscope</title>
     <link rel="stylesheet" href="style.css">
     <style>
-      body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color:rgb(66, 65, 65) }
+        button {
+			color: #ffffff;
+			background-color: #000000;
+			font-size: 19px;
+			border: 5px solid rgb(32, 32, 32);
+			padding: 15px 50px;
+			cursor: pointer;
+		}
+		button:hover {
+			color: #212325;
+			background-color: #4b4b4b;
+		}
+        #info {
+            position: absolute;
+            top: px;
+            width: 100%;
+            
+            z-index: 100;
+            display: block;
+        }
+        #canvas1{
+            position: absolute;
+            top: 250px;
+        }
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
 
-      #form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
-      #input { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
-      #input:focus { outline: none; }
-      #form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
+            /* Hide default HTML checkbox */
+            .switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
 
-      #messages { list-style-type: none; margin: 0; padding: 0; }
-      #messages > li { padding: 0.5rem 1rem; }
-      #messages > li:nth-child(odd) { background: #efefef; }
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+        }
+
+            .slider:before {
+                position: absolute;
+                content: "";
+                height: 26px;
+                width: 26px;
+                left: 4px;
+                bottom: 4px;
+                background-color: white;
+                -webkit-transition: .4s;
+                transition: .4s;
+            }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px #2196F3;
+        }
+
+        input:checked + .slider:before {
+            -webkit-transform: translateX(26px);
+            -ms-transform: translateX(26px);
+            transform: translateX(26px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 34px;
+        }
+
+        .slider.round:before {
+                border-radius: 50%;
+            }
     </style>
 </head>
 <body>
-    <button type="button" input type="button" onclick="askPermission()" name="myButton2">iPhone noobs click here!</button>
-    <canvas id="canvas1"></canvas>
-	<script type="text/javascript" src="display.js"></script>
-    <script type="text/javascript" src="gyroscope.js"></script>
-    <script type="text/javascript" src="script.js"></script>
-	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <div id="info">
+        <h1 id="id01">ID: N/A</h1>
+        <h1 id="id02">Connected Users: N/A</h1>
+        <button id="iphone_button" input type="button" onclick="askPermission()" name="myButton">Connect!</button>
+        <button id="reset_button">RESET</button>
 
-    <ul id="messages"></ul>
-    <form id="form" action="">
-      <input id="input" autocomplete="off" /><button>Send</button>
-    </form>
-    <script src="/socket.io/socket.io.js"></script>
+        <p></p>
+        <label class="switch">
+            <input id ="slider" type="checkbox" checked>
+            <span class="slider"></span>
+        </label>
+    </div>
+
+
+    <canvas id="canvas1"></canvas>
+
+
+
+    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="three.js"></script>
+    <script src="cannon.min.js"></script>
+
+
 
     <script>
-      var socket = io();
 
-      var messages = document.getElementById('messages');
-      var form = document.getElementById('form');
-      var input = document.getElementById('input');
-
-      form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        if (input.value) {
-          socket.emit('chat message', input.value);
-          input.value = '';
+        function askPermission() {   //askPermission is an HTML requirement of iOS
+            DeviceOrientationEvent.requestPermission() //This asks for permission (iOS requirement)
+            window.addEventListener("deviceorientation", function (event) { //This listens to the phone orientation values
+                controller.x = event.alpha;
+                controller.y = event.beta;
+                controller.z = event.gamma;
+            });
         }
-      });
 
-      socket.on('chat message', function(msg) {
-        var item = document.createElement('li');
-        item.textContent = msg;
-        messages.appendChild(item);
-        window.scrollTo(0, document.body.scrollHeight);
-      });
+        //Android users will have their data automatically working on page load from this one.  It can be removed, the button above should also work.
+        if (window.DeviceOrientationEvent) {
+            window.addEventListener("deviceorientation", function (event) {
+                controller.x = event.alpha;
+                controller.y = event.beta;
+                controller.z = event.gamma;
+
+            });
+        }
+
+        var socket = io(); //so we can talk to the server
+       
+
+        var slider = document.getElementById('slider'); //sider to enable sending input or not
+
+
+        iphone_button.addEventListener('click', function (e) {
+            askPermission() //ask permission for gyro info
+        });
+
+        slider.addEventListener('change', function () { //Check if the slider is modified
+            if (this.checked) {
+                gyro_enabled = true; //enabled by default
+            }
+            else {
+                gyro_enabled = false;
+            }
+        });
+
+        reset_button.addEventListener('click', function (e) {
+            
+            socket.emit('chat message', "stuff"); //debug method, print client info into server log
+            socket.emit('reset'); //tell the server to tell all clients to reset
+
+        });
+
+        socket.on('client_reset', function () { //server wants us to reset
+            world.remove(marble0[0]); //delete marble physics body
+            scene.remove(marble0[1]); //delete marble 3d body
+            marble0 = createMarble(scene, world, 1, 1, 1, 0, 0, 3); //make a new marble
+        });
+
+        socket.on('new_connect', function (id,position) { //will be sent to us when server sees we connected
+
+            const element = document.getElementById("id01"); //Display ID across the top
+            element.innerHTML = "ID: " + id;
+
+
+            gyroObject.num_id = id
+            socket.emit('created_gyro', gyroObject, id);
+            average_position = position //Set the position the ball was before we connected
+
+            runGyroscope();
+
+        });
+
+        socket.on('update_count', function (users) { //whenever a new user joins, update the connected clients counter
+            const element2 = document.getElementById("id02");
+            element2.innerHTML = "Connected Users: " + users;
+        });
+
+        socket.on('average_orientation', function (orientation,position,velocity) {//IMPORTANT marble info
+
+            average_orientation = orientation;
+            average_position = position;
+            average_velocity = velocity;
+        });
+
+        //screen.orientation.lock("portrait"); //only works in fullscreen? need to fix this
+
+        const canvas = document.getElementById('canvas1');//debug info
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let updateCount = 0;
+
+        class displayCanvas {
+            constructor() {
+                this.updateCount = 0;
+            }
+            update() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                ctx.font = "20px Georgia";
+                ctx.fillText("Your info:", 10, 20);
+                ctx.fillText("x: " + parseInt(gyroObject.x), 10, 50);
+                ctx.fillText("y: " + parseInt(gyroObject.y), 10, 80);
+                ctx.fillText("z: " + parseInt(gyroObject.z), 10, 110);
+
+                ctx.fillText("Average info:", 10, 140);
+                ctx.fillText("x: " + parseInt(average_orientation[0]), 10, 170);
+                ctx.fillText("y: " + parseInt(average_orientation[1]), 10, 200);
+                ctx.fillText("z: " + parseInt(average_orientation[2]), 10, 230);
+                //ctx.fillText("Updates: " + this.updateCount, 10, 260);
+                this.updateCount++;
+
+            }
+
+
+        }
+
+        
+
+        //Android users will have their data automatically working on page load from this one.  It can be removed, the button above should also work.
+        
+        //This will be the main Gyroscope object, we can initialize it in the main (script.js) if we've confirmed a mobile device.
+        //That object can then use the functions within the class below.
+        const controller = {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+
+        //This will be the main Gyroscope object, we can initialize it in the main (script.js) if we've confirmed a mobile device.
+        //That object can then use the functions within the class below.
+        class Gyroscope {
+            constructor(num_id) {
+
+                this.num_id = num_id;
+                this.x = controller.x
+                this.y = controller.y
+                this.z = controller.z
+                this.ball_pos = null;
+                this.velocity = null;
+                this.enabled = gyro_enabled;
+            }
+
+            //We will call this function recursively from script.  It will return the device orientation data.
+            update() {
+                gyroObject.x = controller.x//unused
+                gyroObject.y = controller.y
+                gyroObject.z = controller.z
+                gyroObject.ball_pos = marble0[1].position;
+                gyroObject.velocity = marble0[0].velocity;
+                gyroObject.enabled = gyro_enabled;
+                socket.emit('gyro_update', this.num_id, this.x, this.y, this.z, this.ball_pos, this.enabled, this.velocity);
+                //send the needed information to the server
+            }
+        }
+
+        //THREE.js is used for the 3D Objects. This library is responsible for RENDERING what is on the screen
+        //CANNON.js is used for physics bodies. This library is responsible for CALCULATING where things should be.
+
+        //Three.js objects copy position/orientation info from cannon.js objects
+
+
+
+
+        function createMarble(scene, world, xscale, yscale, zscale, xpos, ypos, zpos) { //create our marble. We only need 1
+
+            const geometry = new THREE.SphereGeometry(xscale); //radius
+            const texture = new THREE.TextureLoader().load("textures/dirt.png"); //temp texture
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            const material = new THREE.MeshBasicMaterial({ map: texture });
+
+            const sphere1 = new THREE.Mesh(geometry, material);
+            sphere1.position.set(xpos, ypos, zpos);
+            scene.add(sphere1); //add 3D model to scene
+
+            var sphereBody = new CANNON.Body({ //create physics body
+                mass: 5, // kg
+                position: new CANNON.Vec3(xpos, ypos, zpos), // m
+                shape: new CANNON.Sphere(xscale) //radius
+            });
+            world.addBody(sphereBody); //Add PHYSICS body to world
+
+            return [sphereBody, sphere1]; //return our physicsbody and 3d body together
+            
+        }
+        //createBoxShape will create both a THREE.js object and add it to our maze physics object "pivot"
+        function createBoxShape(scene, world,body, xscale, yscale, zscale, xpos, ypos, zpos) {
+
+            const geometry = new THREE.BoxGeometry(xscale, yscale, zscale); //create 3d object
+            const texture = new THREE.TextureLoader().load("textures/wood.png"); //temporary textures
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            const material = new THREE.MeshBasicMaterial({ map: texture });
+
+            const box1 = new THREE.Mesh(geometry, material);
+            box1.position.set(xpos, ypos, zpos);
+            
+            pivot.add(box1); //
+
+            boxBody = new CANNON.Box(new CANNON.Vec3(xscale/2, yscale/2, zscale/2));
+            body.addShape(boxBody, new CANNON.Vec3(xpos, ypos, zpos));
+            
+
+
+            return;
+
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            //do stuff 
+        });
+
+        function degrees_to_radians(degrees) { //orientation is stored in degrees
+            var pi = Math.PI;
+            return degrees * (pi / 180);
+        }
+
+        //Initialize the Gyroscope object for the mobile user
+
+
+        const scene = new THREE.Scene(); //create our 3D scene
+        THREE.Object3D.DefaultUp.set(0, 0, 1);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000); //create a camera 
+        camera.position.z = 10;
+
+
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        scene.background = new THREE.Color(0x707070); //we can get a skybox or change the color
+
+
+
+        let gyro_enabled = true; //Slider is on by default, contributing to average
+
+        let average_position = [0, 0, 0];
+        let average_orientation = [0, 0, 0];
+        let average_velocity = [0, 0, 0];
+
+        let gyroObject = new Gyroscope(0);//create gyroObject
+
+        let display = new displayCanvas(); //debug code
+
+        let frameCounter = 0;
+
+        const pivot = new THREE.Group(); //our MAZE 3d objects
+
+
+
+        // Setup our PHYSICS world
+        var world = new CANNON.World();
+        world.gravity.set(0, 0, -9.82); // m/s²
+
+
+        var fixedTimeStep = 1.0 / 60.0; // seconds
+        var maxSubSteps = 3;
+
+        // Start the simulation PHYSICS loop
+        var lastTime;
+        (function simloop(time) {
+            requestAnimationFrame(simloop);
+            if (lastTime !== undefined) {
+                var dt = (time - lastTime) / 1000;
+                world.step(fixedTimeStep, dt, maxSubSteps);
+                copyCoords(marble0[1], marble0[0]); //copy calculated physics body attributes to 
+                copyCoords(body, pivot); 
+
+            }
+
+            lastTime = time;
+        })();
+
+        //helper method to copy CANNON physics body data to 3D THREE object
+        function copyCoords(mesh, body) {
+            mesh.position.x = body.position.x;
+            mesh.position.y = body.position.y;
+            mesh.position.z = body.position.z;
+            mesh.quaternion.x = body.quaternion.x;
+            mesh.quaternion.y = body.quaternion.y;
+            mesh.quaternion.z = body.quaternion.z;
+            mesh.quaternion.w = body.quaternion.w;
+        }
+
+        //MAIN CODE:
+
+        let level1 =[
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 0, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
+
+
+        let marble0 = createMarble(scene, world, 1, 1, 1, 0, 0, 3); //create marble
+
+        body = new CANNON.Body({//create physics body for MAZE
+            mass: 0
+        });
+        createBoxShape(scene, world, body, 10, 10, 1, 0, 0, 0);//add WALLS and FLOOR to maze
+        createBoxShape(scene, world, body, 1, 10, 1, 5, 0, 1);
+        createBoxShape(scene, world, body, 1, 10, 1, -5, 0, 1);
+
+        world.addBody(body);//add maze physics body
+        scene.add(pivot);//add maze 3d body
+
+
+
+
+        //This is the recursive function that will keep updating the gyroscope and display canvas
+        function runGyroscope() {
+            gyroObject.update();
+            display.update();
+            frameCounter++;
+            //console.log(marble0[0].position);
+            if (frameCounter % 5 == 0 && average_position != null) { 
+                marble0[0].position.x = average_position.x;
+                marble0[0].position.y = average_position.y;
+                marble0[0].position.z = average_position.z;
+                //console.log(average_velocity)
+                marble0[0].velocity.x = average_velocity.x;
+                marble0[0].velocity.y = average_velocity.y;
+                marble0[0].velocity.z = average_velocity.z;
+        }
+
+            /*if (frameCounter % 5 == 0 && average_position != null && average_velocity != null) { //synchronize positions every 7 ticks
+                marble0[0].position.x = average_position[0];
+                marble0[0].position.y = average_position[1];
+                marble0[0].position.z = average_position[2];
+            }
+                
+                marble0[0].velocity.x = average_velocity[0];
+                marble0[0].velocity.y = average_velocity[1];
+                marble0[0].velocity.z = average_velocity[2];
+
+            }*/
+            camera.position.x = marble0[0].position.x //camera follows ball from above
+            camera.position.y = marble0[0].position.y
+            camera.position.z = marble0[0].position.z + 10
+
+            
+            pivot.rotation.x = degrees_to_radians(average_orientation[1]); //move the entire maze
+            pivot.rotation.y = degrees_to_radians(average_orientation[2]);
+
+
+
+            renderer.render(scene, camera);
+            requestAnimationFrame(runGyroscope);
+        }
+
+
+
+
+
+
+
+
     </script>
-  </body>
+</body>
 </html>
 
