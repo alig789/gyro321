@@ -50,7 +50,7 @@ body = new CANNON.Body({//create physics body for MAZE
 });
 generate_level(level1)
 
-world.addBody(body);//add maze physics body
+
 
 
 // Start the simulation PHYSICS loop
@@ -75,14 +75,17 @@ const loop = () => {
 
     const euler = new CANNON.Vec3(average_orientation[0], average_orientation[1], average_orientation[2])
     body.quaternion.setFromEuler(degrees_to_radians(euler.y), degrees_to_radians(euler.z),0, 'XYZ');
-    
+
+    if (marble0.position.z < -150) {
+        reset();
+    }
     //console.log(average_orientation);
     //console.log(body.quaternion);
 
     //io.emit('marble_info', serverMarble.position, serverMarble.quaternion)
     //io.emit('pivot_info', body.quaternion);
     //average_orientation[1]=5
-    io.emit('average_orientation', average_orientation, marble0.position, marble0.velocity)
+    io.emit('average_orientation', average_orientation, marble0.position, marble0.velocity,timer_string)
     previous = now
     tick++
 }
@@ -152,20 +155,17 @@ io.on('connection', (socket) => {
 		
     });
     socket.on('reset', () => {
-        marble0.velocity.x = 0;
-        marble0.velocity.y = 0;
-        marble0.velocity.z = 0;
-        marble0.position.x = 0;
-        marble0.position.y = 0;
-        marble0.position.z = 3;
+        reset();
 
-        //io.emit('client_reset')
-        //average_position = [0, 0, 3];
-        //io.emit('average_orientation', average_orientation, average_position);
-        //average_orientation = [0, 0, 0];
-        //io.emit('chat message', msg);
 
     });
+
+    socket.on('choose_level', (level) => {
+        generate_level(level);
+        socket.emit('level_selected', level);
+
+    });
+
 
     socket.on('orientation', (id) => {
         console.log('message: orientation '+id);
@@ -188,9 +188,18 @@ server.listen(port,'0.0.0.0', () => {
 });
 
 
-
+function reset() {
+    marble0.velocity.x = 0;
+    marble0.velocity.y = 0;
+    marble0.velocity.z = 0;
+    marble0.position.x = 0;
+    marble0.position.y = 0;
+    marble0.position.z = 3;
+    totalSeconds = 0;
+}
 
 function generate_level(level) {
+    world.remove(body);
     body = new CANNON.Body({//create physics body for MAZE
         mass: 0
     });
@@ -213,6 +222,8 @@ function generate_level(level) {
             }
         }
     }
+    world.addBody(body);
+    reset();
 }
 
 class phoneGyro {
@@ -309,3 +320,20 @@ function degrees_to_radians(degrees) { //orientation is stored in degrees
 //First we will add the deviceorientation events, and later we will intialize them into Javascript variables.
 
 //This is where we are temporarily storing the values.  Each Gyroscope client/Object made from script.js will have it's own x, y, z.
+var timerVar = setInterval(countTimer, 100);
+var totalSeconds = 0;
+var timer_string = "";
+function countTimer() {
+    ++totalSeconds;
+
+    var minute = Math.floor((totalSeconds / 10) / 60);
+    var seconds = (totalSeconds / 10 - (minute * 60)).toFixed(1);
+    var milliseconds = 5;
+
+    if (minute < 10)
+        minute = "0" + minute;
+    if (seconds < 10)
+        seconds = "0" + seconds;
+    timer_string = minute + ":" + seconds
+    
+}
