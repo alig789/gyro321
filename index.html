@@ -310,8 +310,7 @@
     <script>
 
         function choose_level() {
-            socket.emit('choose_level'
-            );
+            socket.emit('choose_level');
         }
 
 
@@ -359,7 +358,7 @@
          //so we can talk to the server
 
         socket.on('level_selected', function (level) {
-            //console.log(level);
+            console.log(level);
             generate_level(level_array[level]);
         });
         var spectator_check = document.getElementById('spectator_check'); //sider to enable sending input or not

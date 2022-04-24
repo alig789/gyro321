@@ -186,7 +186,7 @@ io.on('connection', (socket) => {
             current_level = 0;
         }
         generate_level(level_array[current_level]);
-        socket.emit('level_selected', current_level);
+        io.emit('level_selected', current_level);
 
     });
 
