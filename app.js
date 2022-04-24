@@ -17,13 +17,14 @@ app.get('/', (req, res) => {
 var clients = [];//the array of connected clients phoneGyro ob
 var client_count = 0;
 var index = 0;
+var default_pos = [0, 0, 3];
 
 
 var average_orientation = [0, 0, 0];
 level_array = []
 let level0 = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 3, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 1, 1, 1, 1, 1, 1, 0, 0, 1],
     [1, 1, 1, 1, 1, 1, 1, 0, 0, 1],
@@ -39,7 +40,7 @@ level_array.push(level0);
 
 let level1 = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 3, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 0, 1, 1, 1, 1, 0, 0, 1],
     [1, 0, 0, 1, 1, 1, 1, 0, 0, 1],
@@ -52,6 +53,15 @@ let level1 = [
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
 
 level_array.push(level1);
+let level2 = [
+    [1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+    [1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]]
+level_array.push(level2);
 
 var current_level = 0;
 
@@ -168,6 +178,7 @@ io.on('connection', (socket) => {
     socket.on('chat message', (msg) => {
         console.log('message: ' + msg);
         console.log(clients);
+        console.log("DEFAULT POS: " + default_pos);
         console.log('Average orientation: ' + average_orientation);
         //console.log('Average position: ' + average_position);
         console.log(`connected clients = ${client_count}`)
@@ -216,9 +227,9 @@ function reset() {
     marble0.velocity.x = 0;
     marble0.velocity.y = 0;
     marble0.velocity.z = 0;
-    marble0.position.x = 0;
-    marble0.position.y = 0;
-    marble0.position.z = 3;
+    marble0.position.x = default_pos[0];
+    marble0.position.y = default_pos[1];
+    marble0.position.z = default_pos[2];
     totalSeconds = 0;
 }
 
@@ -231,9 +242,9 @@ function generate_level(level) {
     for (let i = 0; i < level.length; i++) {
         for (let j = 0; j < level[i].length; j++) {
 
-            //if (level[i][j] == 1) {
-            createBoxShape(world, body, 1, 1, 1, i - (level.length / 2), j - (level[0].length / 2), 0);
-            //}
+            if (level[i][j] == 0 || level[i][j] == 3) {
+                createBoxShape(world, body, 1, 1, 1, i - (level.length / 2), j - (level[0].length / 2), 0);
+            }
         }
     }
 
@@ -243,6 +254,10 @@ function generate_level(level) {
 
             if (level[i][j] == 1) {
                 createBoxShape(world, body, 1, 1, 1, i - (level.length / 2), j - (level[0].length / 2), 1);
+            }
+            if (level[i][j] == 3) {
+                default_pos[0] =  i-(level.length / 2);
+                default_pos[1] =  j-(level[0].length / 2);
             }
         }
     }
