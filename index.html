@@ -105,6 +105,32 @@
             color:#FFFFFF;
             padding:10px;
         }
+        #popup {
+
+
+
+
+            top: 50%;
+            left: 50%;
+            text-align: center;
+            font-size: 20px;
+            transform: translate(-50%,-50%);
+            background-color: rgb(0,0,0); /* Black fallback color */
+            background-color: rgba(0,0,0, 0.7);
+            color: #FFFFFF;
+            display: block;
+            transition: 0.3s;
+            
+            height: 0%;
+            width: 50%;
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+
+            background-color: rgb(0,0,0); /* Black fallback color */
+            background-color: rgba(0,0,0, 0.7); /* Black w/opacity */
+            overflow-x: hidden; /* Disable horizontal scroll */
+            transition: 0.5s; /* 0.5 second transition effect to slide in or slide down the overlay (height or width, depending on reveal) */
+        }
         .checkbox{
             width:20px;
             height:20px;
@@ -243,6 +269,12 @@
 
     <button id="iphone_button" input type="button" onclick="askPermission()" name="myButton">Connect!</button>
     <button id="reset_button">RESET</button>
+    <div id="popup">
+        <p>Level Complete!</p>
+        <p id="complete_timer">Time: x:x:x:</p>
+        <p></p>
+        <p>Loading next level...</p>
+    </div>
     <!--
     <div id="switch_stuff">
 
@@ -265,7 +297,7 @@
     </div>
 
     <!-- The overlay -->
-    <div id="myNav" class="overlay"z-index=600>
+    <div id="myNav" class="overlay" z-index=600>
 
         <!-- Button to close the overlay navigation -->
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
@@ -292,7 +324,7 @@
     </div>
 
     <!-- Use any element to open/show the overlay navigation menu -->
-    <span class ="navbar-toggler-icon"style="font-size:30px;cursor:pointer" id="open_menu_button" onclick="openNav()"z-index=500>Menu</span>
+    <span class="navbar-toggler-icon" style="font-size:30px;cursor:pointer" id="open_menu_button" onclick="openNav()" z-index=500>Menu</span>
     <!--End overlay-->
 
     <canvas id="canvas1"></canvas>
@@ -354,12 +386,23 @@
         });
         var socket = io();
 
-         //so we can talk to the server
+        //so we can talk to the server
 
         socket.on('level_selected', function (level) {
             console.log(level);
             generate_level(level_array[level]);
         });
+
+        socket.on('level_complete', function (finish_time) {
+
+            var x = document.getElementById('complete_timer');
+            x.innerHTML = finish_time;
+            document.getElementById("popup").style.height = "25%";
+            setTimeout(function () { document.getElementById("popup").style.height = "0%";},4500)
+            
+
+        });
+
         var spectator_check = document.getElementById('spectator_check'); //sider to enable sending input or not
 
         spectator_check.addEventListener('change', function () { //Check if the slider is modified
@@ -387,19 +430,20 @@
 
         reset_button.addEventListener('click', function (e) {
             reset();
-            
+
 
         });
         function reset() {
             socket.emit('chat message', "stuff"); //debug method, print client info into server log
             socket.emit('reset');//tell the server to tell all clients to reset
+
             closeNav();
         }
 
         socket.on('client_reset', function () { //server wants us to reset
             world.remove(marble0[0]); //delete marble physics body
             scene.remove(marble0[1]); //delete marble 3d body
-            marble0 = createMarble(scene, world, 1, 1, 1, 0, 0, 3); //make a new marble
+            marble0 = createMarble(scene, world, 1, 1, 1, 0, 0, 3);//make a new marble
         });
 
         socket.on('new_connect', function (id, current_level) { //will be sent to us when server sees we connected
@@ -601,7 +645,7 @@
 
         let frameCounter = 0;
 
-       
+
 
 
 
@@ -652,8 +696,8 @@
             [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
             [1, 0, 0, 1, 1, 1, 1, 1, 1, 1],
             [1, 0, 0, 1, 1, 1, 1, 1, 1, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 4, 4, 1],
+            [1, 0, 0, 0, 0, 0, 0, 4, 4, 1],
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
         level_array.push(level0);
         let level1 = [
@@ -679,9 +723,12 @@
             [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]]
         level_array.push(level2);
-        
+
         let pivot = new THREE.Group(); //our MAZE 3d objects
         let body = new CANNON.Body({//create physics body for MAZE
+            mass: 0
+        });
+        let goal = new CANNON.Body({//create physics body for MAZE
             mass: 0
         });
 
@@ -689,8 +736,12 @@
 
 
             world.remove(body);
+            world.remove(goal);
             scene.remove(pivot);
             body = new CANNON.Body({//create physics body for MAZE
+                mass: 0
+            });
+            goal = new CANNON.Body({//create physics body for MAZE
                 mass: 0
             });
             pivot = new THREE.Group();
@@ -698,8 +749,12 @@
             for (let i = 0; i < level.length; i++) {
                 for (let j = 0; j < level[i].length; j++) {
 
-                    if (level[i][j] == 0 || level[i][j] == 3 ) {
-                    createBoxShape('cobble', scene, world, body, 1, 1, 1, i - (level.length / 2), j - (level[0].length / 2), 0);
+                    if (level[i][j] == 0 || level[i][j] == 3) {
+                        createBoxShape('cobble', scene, world, body, 1, 1, 1, i - (level.length / 2), j - (level[0].length / 2), 0);
+
+                    }
+                    if (level[i][j] == 4) {
+                        createBoxShape('brick', scene, world, goal, 1, 1, 1, i - (level.length / 2), j - (level[0].length / 2), 0);
                     }
                 }
             }
@@ -713,7 +768,9 @@
                     }
                 }
             }
+
             world.addBody(body);//add maze physics body
+            world.addBody(goal);
             scene.add(pivot);//add maze 3d body
 
         }
@@ -731,7 +788,7 @@
         //createBoxShape(scene, world, body, 1, 10, 1, 5, 0, 1);
         //createBoxShape(scene, world, body, 1, 10, 1, -5, 0, 1);
 
-        
+
 
 
 
@@ -742,7 +799,7 @@
             update_debug();
             frameCounter++;
             //console.log(marble0[0].position);
-            
+
             if (frameCounter % 5 == 0 && average_position != null) {
                 marble0[0].position.x = average_position.x;
                 marble0[0].position.y = average_position.y;
@@ -752,7 +809,7 @@
                 marble0[0].velocity.y = average_velocity.y;
                 marble0[0].velocity.z = average_velocity.z;
             }
-            
+
             /*if (frameCounter % 5 == 0 && average_position != null && average_velocity != null) { //synchronize positions every 7 ticks
                 marble0[0].position.x = average_position[0];
                 marble0[0].position.y = average_position[1];
@@ -769,7 +826,7 @@
             camera.position.x = marble0[0].position.x //camera follows ball from above
             camera.position.y = marble0[0].position.y
             //camera.position.z = marble0[0].position.z + 10
-            console.log(world.gravity);
+            //console.log(world.gravity);
             world.gravity.y = average_orientation[1] / -9.82;
             world.gravity.x = average_orientation[2] / 9.82;
 

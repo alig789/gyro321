@@ -32,8 +32,8 @@ let level0 = [
     [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [1, 0, 0, 1, 1, 1, 1, 1, 1, 1],
     [1, 0, 0, 1, 1, 1, 1, 1, 1, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 4, 4, 1],
+    [1, 0, 0, 0, 0, 0, 0, 4, 4, 1],
     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
 
 level_array.push(level0);
@@ -76,6 +76,9 @@ var maxSubSteps = 3;
 let marble0 = createMarble(world, 0.5, 1, 1, 0, 0, 3); //create marble
 
 body = new CANNON.Body({//create physics body for MAZE
+    mass: 0
+});
+goal = new CANNON.Body({//create physics body for MAZE
     mass: 0
 });
 generate_level(level_array[current_level]);
@@ -193,12 +196,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('choose_level', () => {
-        current_level++;
-        if (current_level >= level_array.length) {
-            current_level = 0;
-        }
-        generate_level(level_array[current_level]);
-        io.emit('level_selected', current_level);
+        next_level();
 
     });
 
@@ -221,8 +219,17 @@ io.on('connection', (socket) => {
 
 server.listen(port,'0.0.0.0', () => {
     console.log('listening on *:3000');
+    
 });
 
+function next_level() {
+    current_level++;
+    if (current_level >= level_array.length) {
+        current_level = 0;
+    }
+    generate_level(level_array[current_level]);
+    io.emit('level_selected', current_level);
+}
 
 function reset() {
     marble0.velocity.x = 0;
@@ -231,12 +238,17 @@ function reset() {
     marble0.position.x = default_pos[0];
     marble0.position.y = default_pos[1];
     marble0.position.z = default_pos[2];
+    marble0.wakeUp();
     totalSeconds = 0;
 }
 
 function generate_level(level) {
     world.remove(body);
+    world.remove(goal);
     body = new CANNON.Body({//create physics body for MAZE
+        mass: 0
+    });
+    goal = new CANNON.Body({//create physics body for MAZE
         mass: 0
     });
     //create floor
@@ -245,6 +257,9 @@ function generate_level(level) {
 
             if (level[i][j] == 0 || level[i][j] == 3) {
                 createBoxShape(world, body, 1, 1, 1, i - (level.length / 2), j - (level[0].length / 2), 0);
+            }
+            if (level[i][j] == 4) {
+                createBoxShape(world, goal, 1, 1, 1, i - (level.length / 2), j - (level[0].length / 2), 0);
             }
         }
     }
@@ -262,8 +277,22 @@ function generate_level(level) {
             }
         }
     }
+    goal.addEventListener("collide", function (e) {
+        level_complete();
+    });
     world.addBody(body);
+    world.addBody(goal);
+
     reset();
+}
+
+function level_complete() {
+    
+    clearInterval(timerVar);
+    marble0.sleep();
+    io.emit('level_complete', timer_string);
+    setTimeout(next_level, 5000);
+
 }
 
 class phoneGyro {
@@ -362,6 +391,7 @@ function degrees_to_radians(degrees) { //orientation is stored in degrees
 //This is where we are temporarily storing the values.  Each Gyroscope client/Object made from script.js will have it's own x, y, z.
 var timerVar = setInterval(countTimer, 100);
 var totalSeconds = 0;
+
 var timer_string = "";
 function countTimer() {
     ++totalSeconds;
@@ -377,3 +407,5 @@ function countTimer() {
     timer_string = minute + ":" + seconds
     
 }
+
+
