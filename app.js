@@ -224,6 +224,7 @@ function next_level() {
     if (current_level >= level_array.length) {
         current_level = 0;
     }
+    timerVar = setInterval(countTimer, 100);
     generate_level(level_array[current_level]);
     io.emit('level_selected', current_level);
 }
