@@ -106,8 +106,8 @@ const loop = () => {
     const euler = new CANNON.Vec3(average_orientation[0], average_orientation[1], average_orientation[2])
     //body.quaternion.setFromEuler(degrees_to_radians(euler.y), degrees_to_radians(euler.z),0, 'XYZ');
     world.gravity.y = average_orientation[1] / -9.82;
-    world.gravity.x = average_orientation[2] / -9.82;
-    if (marble0.position.z < -50) {
+    world.gravity.x = average_orientation[2] / 9.82;
+    if (marble0.position.z < -20) {
         reset();
     }
     //console.log(average_orientation);
