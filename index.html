@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,height=device-height,user-scalable=no,initial-scale=1.0">
+    <title>Gyroscope</title>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.7/css/all.css">
+    <style>
+        body { 
+            position: fixed;
+            margin: 0; 
+               padding-bottom: 3rem;
+               font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+               background-color:rgb(66, 65, 65) }
+        button {
+            
+			color: #ffffff;
+			background-color: #000000;
+			font-size: 19px;
+			border: 5px solid rgb(32, 32, 32);
+			padding: 15px 50px;
+			cursor: pointer;
+            z-index: 200;
+            text-align:center;
+		}
+        #iphone_button {
+            position: absolute;
+            bottom: 12%;
+            display: none;
+        }
+        #reset_button {
+            position: absolute;
+            left: 50%;
+            bottom: 50px;
+            width: 170px;
+            transform: translate(-50%);
+            display:none;
+        }
+		button:hover {
+			color: #212325;
+			background-color: #4b4b4b;
+		}
+        #timer {
+            position: absolute;
+            text-align:center;
+            font-size:30px;
+
+            left: 50%;
+            bottom: 60px;
+            width: 40%;
+            transform: translate(-50%);
+        }
+        #info_ID {
+            position: absolute;
+            top:-20px;
+            text-align:left;
+            left: 20px;
+            width: 40%;
+            
+            z-index: 100;
+            
+        }
+        #info_users {
+            position: absolute;
+            top:-20px;
+            text-align:right;
+            right:20px;
+    
+            width: 50%;
+            z-index: 100;
+            
+        }
+        #canvas1{
+            position: absolute;
+            top: 250px;
+            display:none;
+          
+            width: 250px;
+        }
+        #switch_stuff {
+            position: absolute;
+            z-index:300;
+            bottom: 85px;
+            
+        }
+        #open_menu_button {
+            position: absolute;
+            bottom:50px;
+
+            
+            right: 20px;
+
+        }
+        #debug_info {
+            display: none;
+            position: absolute;
+            line-height: 10px;
+            bottom: 50%;
+            left: 10px;
+            background-color: rgb(0,0,0); /* Black fallback color */
+            background-color: rgba(0,0,0, 0.7);
+            color:#FFFFFF;
+            padding:10px;
+        }
+        .checkbox{
+            width:20px;
+            height:20px;
+        }
+        /* The switch - the box around the slider */
+        .switch {
+            position: absolute;
+            text-align:left;
+            color:#FFFFFF;
+            width: 60px;
+            height: 34px;
+        }
+
+            /* Hide default HTML checkbox */
+            .switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+        }
+
+            .slider:before {
+                position: absolute;
+                content: "";
+                height: 26px;
+                width: 26px;
+                left: 4px;
+                bottom: 4px;
+                background-color: white;
+                -webkit-transition: .4s;
+                transition: .4s;
+            }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px #2196F3;
+        }
+
+        input:checked + .slider:before {
+            -webkit-transform: translateX(26px);
+            -ms-transform: translateX(26px);
+            transform: translateX(26px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+            border-radius: 34px;
+        }
+
+        .slider.round:before {
+                border-radius: 50%;
+            }
+        /* The Overlay (background) */
+        .overlay {
+            /* Height & width depends on how you want to reveal the overlay (see JS below) */
+            height: 0%;
+            width: 100%;
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            background-color: rgb(0,0,0); /* Black fallback color */
+            background-color: rgba(0,0,0, 0.7); /* Black w/opacity */
+            overflow-x: hidden; /* Disable horizontal scroll */
+            transition: 0.5s; /* 0.5 second transition effect to slide in or slide down the overlay (height or width, depending on reveal) */
+        }
+
+        /* Position the content inside the overlay */
+        .overlay-content {
+            position: relative;
+            top: 25%; /* 25% from the top */
+            width: 100%; /* 100% width */
+            text-align: center; /* Centered text/links */
+            margin-top: 30px; /* 30px top margin to avoid conflict with the close button on smaller screens */
+        }
+
+        /* The navigation links inside the overlay */
+        .overlay a {
+            padding: 8px;
+            text-decoration: none;
+            font-size: 36px;
+            color: #FFFFFF;
+            display: block; /* Display block instead of inline */
+            transition: 0.3s; /* Transition effects on hover (color) */
+        }
+
+            /* When you mouse over the navigation links, change their color */
+            .overlay a:hover, .overlay a:focus {
+                color: #f1f1f1;
+            }
+
+        /* Position the close button (top right corner) */
+        .overlay .closebtn {
+            position: absolute;
+            top: 20px;
+            right: 45px;
+            font-size: 60px;
+        }
+
+        /* When the height of the screen is less than 450 pixels, change the font-size of the links and position the close button again, so they don't overlap */
+        @media screen and (max-height: 450px) {
+            .overlay a {
+                font-size: 20px;
+            }
+
+            .overlay .closebtn {
+                font-size: 40px;
+                top: 15px;
+                right: 35px;
+            }
+        }
+
+        .overlaymain {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            background-image: url(textures/background.gif);
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center;
+            z-index: 9999;
+        }
+
+        .overlaymain-text {
+            position: absolute;
+            top: 20%;
+            width: 100%;
+            font-size: 25px;
+            color: #FFFFFF;
+            text-align: center;
+        }
+
+        .animate-character {
+            text-transform: uppercase;
+            background-image: linear-gradient( -225deg, #231557 0%, #44107a 29%, #ff1361 67%, #fff800 100% );
+            background-size: auto auto;
+            background-clip: border-box;
+            background-size: 200% auto;
+            color: #fff;
+            background-clip: text;
+            text-fill-color: transparent;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: textclip 2s linear infinite;
+            display: inline-block;
+            font-size: 40px;
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translate(-50%,-50%);
+            -ms-transform: translate(-50%,-50%);
+            text-align: center;
+        }
+
+        @keyframes textclip {
+            to {
+                background-position: 200% center;
+            }
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="info_ID">
+        <h1 id="id01">ID: N/A</h1>
+    </div>
+    <div id="info_users">
+        <h1 id="id02">Players: N/A</h1>
+    </div>
+
+    <button id="iphone_button" input type="button" onclick="askPermission()" name="myButton">Connect!</button>
+    <button id="reset_button">RESET</button>
+    <!--
+    <div id="switch_stuff">
+
+        <label class="switch">
+            <input id="slider" type="checkbox" checked>
+            <span class="slider"></span>
+        </label>
+    </div>
+    -->
+    <div id="debug_info">
+        <p>Your info:</p>
+        <p id="x1">X =</p>
+        <p id="y1">Y =</p>
+        <p id="z1">Z =</p>
+        <p>Average info:</p>
+        <p id="x2">X =</p>
+        <p id="y2">Y =</p>
+        <p id="z2">Z =</p>
+
+    </div>
+
+    <!-- The overlay -->
+    <div id="myNav" class="overlay" z-index=600>
+
+        <!-- Button to close the overlay navigation -->
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+
+        <!-- Overlay content -->
+        <div class="overlay-content">
+            <a onclick="reset()" href="#">RESET</a>
+            <a onclick="choose_level()" href="#">Skip Level</a>
+            <a>
+                Show Debug Info
+                <input class="checkbox" id="debug_check" type="checkbox">
+                <span></span>
+            </a>
+            <a>
+                Specator Mode
+                <input class="checkbox" id="spectator_check" type="checkbox">
+                <span></span>
+            </a>
+            <a onclick="askPermission()" href="#">iPhones</a>
+
+
+        </div>
+
+    </div>
+
+    <!-- Use any element to open/show the overlay navigation menu -->
+    <span class="navbar-toggler-icon" style="font-size:30px;cursor:pointer" id="open_menu_button" onclick="openNav()" z-index=500>Menu</span>
+    <!--End overlay-->
+
+    <div id="maindisplay" class="overlaymain" onclick="closemain()">
+    <h3 class="animate-character">Welcome to Gyroscope.live!</h3>
+    <div id="textoverlay" class="overlaymain-text">
+        <p>How to play: Use your phones gyroscope function to guide the marble.</p>
+        <p>You must work with other players to move the marble to its goal...</p>
+        <p>Tilt your screen in the direction you wish to move the marble!</p>
+        <p>Click the button below to continue!</p>
+        <button onclick="askPermission();closemain()">Play</button>
+    </div>
+    </div>
+
+    <script>
+        function closemain() {
+            document.getElementById("maindisplay").style.display = "none";
+        }
+    </script>
+
+    <canvas id="canvas1"></canvas>
+
+    <div id="timer"></div>
+    <!--<div id ="stop_timer" onclick="clearInterval(timerVar)">Stop time</div>-->
+
+    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="three.js"></script>
+    <script src="cannon.min.js"></script>
+
+
+
+    <script>
+
+        function choose_level() {
+            socket.emit('choose_level');
+        }
+
+
+
+        function askPermission() {   //askPermission is an HTML requirement of iOS
+            DeviceOrientationEvent.requestPermission() //This asks for permission (iOS requirement)
+            window.addEventListener("deviceorientation", function (event) { //This listens to the phone orientation values
+                controller.x = event.alpha;
+                controller.y = event.beta;
+                controller.z = event.gamma;
+            });
+        }
+        /* Open */
+        function openNav() {
+            document.getElementById("myNav").style.height = "100%";
+        }
+
+        /* Close */
+        function closeNav() {
+            document.getElementById("myNav").style.height = "0%";
+        }
+
+        window.addEventListener("resize", function () {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+
+        }, false);
+
+        //Android users will have their data automatically working on page load from this one.  It can be removed, the button above should also work.
+        if (window.DeviceOrientationEvent) {
+            window.addEventListener("deviceorientation", function (event) {
+                controller.x = event.alpha;
+                controller.y = event.beta;
+                controller.z = event.gamma;
+
+            });
+        }
+
+        iphone_button.addEventListener('click', function (e) {
+            askPermission() //ask permission for gyro info
+        });
+        var socket = io();
+
+        //so we can talk to the server
+
+        socket.on('level_selected', function (level) {
+            console.log(level);
+            generate_level(level_array[level]);
+        });
+        var spectator_check = document.getElementById('spectator_check'); //sider to enable sending input or not
+
+        spectator_check.addEventListener('change', function () { //Check if the slider is modified
+            if (this.checked) {
+                gyro_enabled = false; //enabled by default
+            }
+            else {
+                gyro_enabled = true;
+
+            }
+        });
+        var debug_check = document.getElementById('debug_check'); //sider to enable sending input or not
+
+        debug_check.addEventListener('change', function () { //Check if the slider is modified
+            var x = document.getElementById('debug_info');
+            if (this.checked) {
+                x.style.display = 'block'
+
+            }
+            else {
+                x.style.display = 'none'
+
+            }
+        });
+
+        reset_button.addEventListener('click', function (e) {
+            reset();
+
+
+        });
+        function reset() {
+            socket.emit('chat message', "stuff"); //debug method, print client info into server log
+            socket.emit('reset');//tell the server to tell all clients to reset
+            closeNav();
+        }
+
+        socket.on('client_reset', function () { //server wants us to reset
+            world.remove(marble0[0]); //delete marble physics body
+            scene.remove(marble0[1]); //delete marble 3d body
+            marble0 = createMarble(scene, world, 1, 1, 1, 0, 0, 3); //make a new marble
+        });
+
+        socket.on('new_connect', function (id, current_level) { //will be sent to us when server sees we connected
+
+            const element = document.getElementById("id01"); //Display ID across the top
+            element.innerHTML = "ID: " + id;
+
+
+            gyroObject.num_id = id
+            socket.emit('created_gyro', gyroObject, id);
+
+            generate_level(level_array[current_level]);
+            runGyroscope();
+
+        });
+
+        socket.on('update_count', function (users) { //whenever a new user joins, update the connected clients counter
+            const element2 = document.getElementById("id02");
+            element2.innerHTML = "Players: " + users;
+        });
+
+        socket.on('average_orientation', function (orientation, position, velocity, timer_string) {//IMPORTANT marble info
+
+            average_orientation = orientation;
+            average_position = position;
+            average_velocity = velocity;
+            document.getElementById("timer").innerHTML = timer_string;
+        });
+
+        //screen.orientation.lock("portrait"); //only works in fullscreen? need to fix this
+
+        const canvas = document.getElementById('canvas1');//debug info
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const debug_stuff = document.getElementById('debug_info');
+        function update_debug() {
+            document.getElementById("x1").innerHTML = "X = " + parseInt(gyroObject.x)
+            document.getElementById("y1").innerHTML = "Y = " + parseInt(gyroObject.y)
+            document.getElementById("z1").innerHTML = "Z = " + parseInt(gyroObject.z)
+            document.getElementById("x2").innerHTML = "X = " + parseInt(average_orientation[0])
+            document.getElementById("y2").innerHTML = "Y = " + parseInt(average_orientation[1])
+            document.getElementById("z2").innerHTML = "Z = " + parseInt(average_orientation[2])
+        }
+        let updateCount = 0;
+
+        class displayCanvas {
+            constructor() {
+                this.updateCount = 0;
+            }
+            update() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                ctx.font = "100px Georgia";
+                ctx.fillText("Your info:", 10, 20);
+                ctx.fillText("x: " + parseInt(gyroObject.x), 10, 50);
+                ctx.fillText("y: " + parseInt(gyroObject.y), 10, 80);
+                ctx.fillText("z: " + parseInt(gyroObject.z), 10, 110);
+
+                ctx.fillText("Average info:", 10, 140);
+                ctx.fillText("x: " + parseInt(average_orientation[0]), 10, 170);
+                ctx.fillText("y: " + parseInt(average_orientation[1]), 10, 200);
+                ctx.fillText("z: " + parseInt(average_orientation[2]), 10, 230);
+                //ctx.fillText("Updates: " + this.updateCount, 10, 260);
+                this.updateCount++;
+
+            }
+
+
+        }
+
+
+
+        //Android users will have their data automatically working on page load from this one.  It can be removed, the button above should also work.
+
+        //This will be the main Gyroscope object, we can initialize it in the main (script.js) if we've confirmed a mobile device.
+        //That object can then use the functions within the class below.
+        const controller = {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+
+        //This will be the main Gyroscope object, we can initialize it in the main (script.js) if we've confirmed a mobile device.
+        //That object can then use the functions within the class below.
+        class Gyroscope {
+            constructor(num_id) {
+
+                this.num_id = num_id;
+                this.x = controller.x
+                this.y = controller.y
+                this.z = controller.z
+                this.ball_pos = null;
+                this.velocity = null;
+                this.enabled = gyro_enabled;
+            }
+
+            //We will call this function recursively from script.  It will return the device orientation data.
+            update() {
+                gyroObject.x = controller.x//unused
+                gyroObject.y = controller.y
+                gyroObject.z = controller.z
+                gyroObject.ball_pos = marble0[1].position;
+                gyroObject.velocity = marble0[0].velocity;
+                gyroObject.enabled = gyro_enabled;
+                socket.emit('gyro_update', this.num_id, this.x, this.y, this.z, this.ball_pos, this.enabled, this.velocity);
+                //send the needed information to the server
+            }
+        }
+
+        //THREE.js is used for the 3D Objects. This library is responsible for RENDERING what is on the screen
+        //CANNON.js is used for physics bodies. This library is responsible for CALCULATING where things should be.
+
+        //Three.js objects copy position/orientation info from cannon.js objects
+
+
+
+
+        function createMarble(scene, world, xscale, yscale, zscale, xpos, ypos, zpos) { //create our marble. We only need 1
+
+            const geometry = new THREE.SphereGeometry(xscale); //radius
+            const texture = new THREE.TextureLoader().load("textures/dirt.png"); //temp texture
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            const material = new THREE.MeshBasicMaterial({ map: texture });
+
+            const sphere1 = new THREE.Mesh(geometry, material);
+            sphere1.position.set(xpos, ypos, zpos);
+            scene.add(sphere1); //add 3D model to scene
+
+            var sphereBody = new CANNON.Body({ //create physics body
+                mass: 5, // kg
+                position: new CANNON.Vec3(xpos, ypos, zpos), // m
+                shape: new CANNON.Sphere(xscale) //radius
+            });
+            world.addBody(sphereBody); //Add PHYSICS body to world
+
+            return [sphereBody, sphere1]; //return our physicsbody and 3d body together
+
+        }
+        //createBoxShape will create both a THREE.js object and add it to our maze physics object "pivot"
+        function createBoxShape(texture_choice, scene, world, body, xscale, yscale, zscale, xpos, ypos, zpos) {
+
+            const geometry = new THREE.BoxGeometry(xscale, yscale, zscale); //create 3d object
+            const texture = new THREE.TextureLoader().load(`textures\\${texture_choice}.png`); //temporary textures
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            const material = new THREE.MeshBasicMaterial({ map: texture });
+
+            const box1 = new THREE.Mesh(geometry, material);
+            box1.position.set(xpos, ypos, zpos);
+
+            pivot.add(box1); //
+
+            boxBody = new CANNON.Box(new CANNON.Vec3(xscale / 2, yscale / 2, zscale / 2));
+            body.addShape(boxBody, new CANNON.Vec3(xpos, ypos, zpos));
+
+
+
+            return;
+
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            //do stuff
+        });
+
+        function degrees_to_radians(degrees) { //orientation is stored in degrees
+            var pi = Math.PI;
+            return degrees * (pi / 180);
+        }
+
+        //Initialize the Gyroscope object for the mobile user
+
+
+        const scene = new THREE.Scene(); //create our 3D scene
+        THREE.Object3D.DefaultUp.set(0, 0, 1);
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000); //create a camera
+        camera.position.z = 10;
+
+
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        scene.background = new THREE.Color(0x707070); //we can get a skybox or change the color
+
+
+
+        let gyro_enabled = true; //Slider is on by default, contributing to average
+
+        let average_position = [0, 0, 0];
+        let average_orientation = [0, 0, 0];
+        let average_velocity = [0, 0, 0];
+
+        let gyroObject = new Gyroscope(0);//create gyroObject
+
+        let display = new displayCanvas(); //debug code
+
+        let frameCounter = 0;
+
+
+
+
+
+        // Setup our PHYSICS world
+        var world = new CANNON.World();
+        world.gravity.set(0, 0, -9.82); // m/s²
+
+
+        var fixedTimeStep = 1.0 / 60.0; // seconds
+        var maxSubSteps = 3;
+
+        // Start the simulation PHYSICS loop
+        var lastTime;
+        (function simloop(time) {
+            requestAnimationFrame(simloop);
+            if (lastTime !== undefined) {
+                var dt = (time - lastTime) / 1000;
+                world.step(fixedTimeStep, dt, maxSubSteps);
+                copyCoords(marble0[1], marble0[0]); //copy calculated physics body attributes to
+                copyCoords(body, pivot);
+
+            }
+
+            lastTime = time;
+        })();
+
+        //helper method to copy CANNON physics body data to 3D THREE object
+        function copyCoords(mesh, body) {
+            mesh.position.x = body.position.x;
+            mesh.position.y = body.position.y;
+            mesh.position.z = body.position.z;
+            mesh.quaternion.x = body.quaternion.x;
+            mesh.quaternion.y = body.quaternion.y;
+            mesh.quaternion.z = body.quaternion.z;
+            mesh.quaternion.w = body.quaternion.w;
+        }
+
+        //MAIN CODE:
+        //our representation of a level
+        let level_array = [];
+        let level0 = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 3, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
+        level_array.push(level0);
+        let level1 = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 3, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 1, 1, 1, 1, 0, 0, 1],
+            [1, 0, 0, 1, 1, 1, 1, 0, 0, 1],
+            [1, 0, 0, 1, 1, 1, 1, 0, 0, 1],
+            [1, 0, 0, 1, 1, 1, 1, 0, 0, 1],
+            [1, 0, 0, 1, 1, 1, 1, 0, 0, 1],
+            [1, 0, 0, 1, 1, 1, 1, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
+        level_array.push(level1);
+        let level2 = [
+            [1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+            [1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]]
+        level_array.push(level2);
+
+        let pivot = new THREE.Group(); //our MAZE 3d objects
+        let body = new CANNON.Body({//create physics body for MAZE
+            mass: 0
+        });
+
+        function generate_level(level) {
+
+
+            world.remove(body);
+            scene.remove(pivot);
+            body = new CANNON.Body({//create physics body for MAZE
+                mass: 0
+            });
+            pivot = new THREE.Group();
+            //create floor
+            for (let i = 0; i < level.length; i++) {
+                for (let j = 0; j < level[i].length; j++) {
+
+                    if (level[i][j] == 0 || level[i][j] == 3) {
+                        createBoxShape('cobble', scene, world, body, 1, 1, 1, i - (level.length / 2), j - (level[0].length / 2), 0);
+                    }
+                }
+            }
+
+
+            for (let i = 0; i < level.length; i++) {
+                for (let j = 0; j < level[i].length; j++) {
+
+                    if (level[i][j] == 1) {
+                        createBoxShape('wood', scene, world, body, 1, 1, 1, i - (level.length / 2), j - (level[0].length / 2), 1);
+                    }
+                }
+            }
+            world.addBody(body);//add maze physics body
+            scene.add(pivot);//add maze 3d body
+
+        }
+        //createBoxShape(scene,world,body,level[0].length
+
+
+
+
+        let marble0 = createMarble(scene, world, 0.5, 1, 1, 2, 2, 3); //create marble
+
+
+        //generate_level(level1);
+
+        //createBoxShape(scene, world, body, 10, 10, 1, 0, 0, 0);//add WALLS and FLOOR to maze
+        //createBoxShape(scene, world, body, 1, 10, 1, 5, 0, 1);
+        //createBoxShape(scene, world, body, 1, 10, 1, -5, 0, 1);
+
+
+
+
+
+
+        //This is the recursive function that will keep updating the gyroscope and display canvas
+        function runGyroscope() {
+            gyroObject.update();
+            update_debug();
+            frameCounter++;
+            //console.log(marble0[0].position);
+
+            if (frameCounter % 5 == 0 && average_position != null) {
+                marble0[0].position.x = average_position.x;
+                marble0[0].position.y = average_position.y;
+                marble0[0].position.z = average_position.z;
+                //console.log(average_velocity)
+                marble0[0].velocity.x = average_velocity.x;
+                marble0[0].velocity.y = average_velocity.y;
+                marble0[0].velocity.z = average_velocity.z;
+            }
+
+            /*if (frameCounter % 5 == 0 && average_position != null && average_velocity != null) { //synchronize positions every 7 ticks
+                marble0[0].position.x = average_position[0];
+                marble0[0].position.y = average_position[1];
+                marble0[0].position.z = average_position[2];
+            }
+
+                marble0[0].velocity.x = average_velocity[0];
+                marble0[0].velocity.y = average_velocity[1];
+                marble0[0].velocity.z = average_velocity[2];
+
+            }*/
+            //world.gravity.x += 0.1;
+
+            camera.position.x = marble0[0].position.x //camera follows ball from above
+            camera.position.y = marble0[0].position.y
+            //camera.position.z = marble0[0].position.z + 10
+            console.log(world.gravity);
+            world.gravity.y = average_orientation[1] / -9.82;
+            world.gravity.x = average_orientation[2] / 9.82;
+
+            //pivot.rotation.x = degrees_to_radians(average_orientation[1]); //move the entire maze
+            //pivot.rotation.y = degrees_to_radians(average_orientation[2]);
+
+
+
+            renderer.render(scene, camera);
+            requestAnimationFrame(runGyroscope);
+        }
+
+
+
+
+
+
+
+
+    </script>
+</body>
+</html>
+
