@@ -224,6 +224,7 @@ function next_level() {
     if (current_level >= level_array.length) {
         current_level = 0;
     }
+    clearInterval(timerVar);
     timerVar = setInterval(countTimer, 100);
     generate_level(level_array[current_level]);
     io.emit('level_selected', current_level);
@@ -237,6 +238,8 @@ function reset() {
     marble0.position.y = default_pos[1];
     marble0.position.z = default_pos[2];
     marble0.wakeUp();
+    clearInterval(timerVar);
+    timerVar = setInterval(countTimer, 100);
     totalSeconds = 0;
 }
 
@@ -387,7 +390,7 @@ function degrees_to_radians(degrees) { //orientation is stored in degrees
 //First we will add the deviceorientation events, and later we will intialize them into Javascript variables.
 
 //This is where we are temporarily storing the values.  Each Gyroscope client/Object made from script.js will have it's own x, y, z.
-var timerVar = setInterval(countTimer, 100);
+var timerVar;
 var totalSeconds = 0;
 
 var timer_string = "";

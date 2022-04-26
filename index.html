@@ -565,7 +565,7 @@
         function createMarble(scene, world, xscale, yscale, zscale, xpos, ypos, zpos) { //create our marble. We only need 1
 
             const geometry = new THREE.SphereGeometry(xscale); //radius
-            const texture = new THREE.TextureLoader().load("textures/jupiter.png"); //temp texture
+            const texture = new THREE.TextureLoader().load("textures/earth.png"); //temp texture
             texture.wrapS = THREE.RepeatWrapping;
             texture.wrapT = THREE.RepeatWrapping;
             const material = new THREE.MeshBasicMaterial({ map: texture });
@@ -624,12 +624,19 @@
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000); //create a camera
         camera.position.z = 10;
 
+        const light = new THREE.PointLight(0xff0000, 10, 0);
+        light.position.z = 10;
+        
+
 
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        scene.background = new THREE.Color(0x707070); //we can get a skybox or change the color
+        const loader = new THREE.CubeTextureLoader();
+        const bgTexture = loader.load(['textures/posx.png', 'textures/negx.png', 'textures/posy.png', 'textures/negy.png', 'textures/posz.png', 'textures/negz.png']);
+        scene.background = bgTexture;
+        //scene.background = new THREE.Color(0x707070); //we can get a skybox or change the color
 
 
 
@@ -696,8 +703,8 @@
             [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
             [1, 0, 0, 1, 1, 1, 1, 1, 1, 1],
             [1, 0, 0, 1, 1, 1, 1, 1, 1, 1],
-            [1, 0, 0, 0, 0, 0, 0, 4, 4, 1],
-            [1, 0, 0, 0, 0, 0, 0, 4, 4, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 4, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 4, 1],
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
         level_array.push(level0);
         let level1 = [
@@ -750,11 +757,11 @@
                 for (let j = 0; j < level[i].length; j++) {
 
                     if (level[i][j] == 0 || level[i][j] == 3) {
-                        createBoxShape('cobble', scene, world, body, 1, 1, 1, i - (level.length / 2), j - (level[0].length / 2), 0);
+                        createBoxShape('floor', scene, world, body, 1, 1, 1, i - (level.length / 2), j - (level[0].length / 2), 0);
 
                     }
                     if (level[i][j] == 4) {
-                        createBoxShape('brick', scene, world, goal, 1, 1, 1, i - (level.length / 2), j - (level[0].length / 2), 0);
+                        createBoxShape('finish', scene, world, goal, 1, 1, 1, i - (level.length / 2), j - (level[0].length / 2), 0);
                     }
                 }
             }
@@ -764,7 +771,7 @@
                 for (let j = 0; j < level[i].length; j++) {
 
                     if (level[i][j] == 1) {
-                        createBoxShape('wood', scene, world, body, 1, 1, 1, i - (level.length / 2), j - (level[0].length / 2), 1);
+                        createBoxShape('wall', scene, world, body, 1, 1, 1, i - (level.length / 2), j - (level[0].length / 2), 1);
                     }
                 }
             }
@@ -825,6 +832,9 @@
 
             camera.position.x = marble0[0].position.x //camera follows ball from above
             camera.position.y = marble0[0].position.y
+
+            light.position.x = marble0[0].position.x //camera follows ball from above
+            light.position.y = marble0[0].position.y
             //camera.position.z = marble0[0].position.z + 10
             //console.log(world.gravity);
             world.gravity.y = average_orientation[1] / -9.82;
