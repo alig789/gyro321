@@ -642,8 +642,8 @@
             //We will call this function recursively from script.  It will return the device orientation data.
             update() {
                 gyroObject.x = controller.x//unused
-                gyroObject.y = controller.y
-                gyroObject.z = controller.z
+                gyroObject.y = 10
+                gyroObject.z = 10
                 gyroObject.ball_pos = marble0[1].position;
                 gyroObject.velocity = marble0[0].velocity;
                 gyroObject.enabled = gyro_enabled;
@@ -973,8 +973,8 @@
             arrowHelper.position.x = marble0[0].position.x;
             arrowHelper.position.y = marble0[0].position.y;
             arrowHelper.position.z = marble0[0].position.z;
-            arrowHelper.setLength(Math.sqrt(Math.pow(average_orientation[2], 2) + Math.pow(average_orientation[1], 2))/10);
-            arrowHelper.setDirection(new THREE.Vector3(average_orientation[2], (-1 *average_orientation[1]), 0));
+            arrowHelper.setLength(Math.sqrt(Math.pow(average_orientation[2], 2) + Math.pow(average_orientation[1], 2))/20);
+            arrowHelper.setDirection(new THREE.Vector3(average_orientation[2], (-1 *average_orientation[1]), 0).normalize());
 
             //pivot.rotation.x = degrees_to_radians(average_orientation[1]); //move the entire maze
             //pivot.rotation.y = degrees_to_radians(average_orientation[2]);
