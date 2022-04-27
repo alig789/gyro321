@@ -642,8 +642,8 @@
             //We will call this function recursively from script.  It will return the device orientation data.
             update() {
                 gyroObject.x = controller.x//unused
-                gyroObject.y = 10
-                gyroObject.z = 10
+                gyroObject.y = controller.y
+                gyroObject.z = controller.z
                 gyroObject.ball_pos = marble0[1].position;
                 gyroObject.velocity = marble0[0].velocity;
                 gyroObject.enabled = gyro_enabled;
