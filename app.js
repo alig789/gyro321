@@ -116,7 +116,7 @@ const loop = () => {
     //io.emit('marble_info', serverMarble.position, serverMarble.quaternion)
     //io.emit('pivot_info', body.quaternion);
     //average_orientation[1]=5
-    averageOrientation(clients);
+    
     io.emit('average_orientation', average_orientation, marble0.position, marble0.velocity,timer_string)
     previous = now
     tick++
@@ -170,6 +170,7 @@ io.on('connection', (socket) => {
                 clients[id].ball_pos = ball_pos;
                 clients[id].gyroData.enabled = gyro_enabled;
                 clients[id].velocity = velocity;
+                averageOrientation(clients);
                 
                 //io.emit('average_orientation', average_orientation,marble0.position,marble0.velocity)
             }
