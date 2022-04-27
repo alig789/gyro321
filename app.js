@@ -60,6 +60,8 @@ let level2 = [
     [1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]]
 level_array.push(level2);
 
+
+
 var current_level = 0;
 
 var world = new CANNON.World();

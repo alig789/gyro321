@@ -912,8 +912,15 @@
         var arrowHelper = new THREE.ArrowHelper(dir, origin, length, hex);
 
         let marble0 = createMarble(scene, world, 0.5, 1, 1, 2, 2, 3); //create marble
-
-        
+        var current_key = null;
+        window.addEventListener('keydown', function (e) {
+            current_key = e.keyCode;
+        })
+        window.addEventListener('keyup', function (e) {
+            current_key = null;
+            controller.y = 0;
+            controller.z = 0;
+        })
         
 
 
@@ -978,6 +985,12 @@
 
             //pivot.rotation.x = degrees_to_radians(average_orientation[1]); //move the entire maze
             //pivot.rotation.y = degrees_to_radians(average_orientation[2]);
+
+            if (current_key == 37) { controller.z = -30; }
+            if (current_key == 39) { controller.z = 30; }
+            if (current_key == 38) { controller.y = -30; }
+            if (current_key == 40) { controller.y = 30; }
+
 
 
 
