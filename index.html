@@ -26,6 +26,9 @@
             z-index: 200;
             text-align:center;
 		}
+        .title_info{
+            color:#ccc;
+        }
         #iphone_button {
             position: absolute;
             bottom: 12%;
@@ -47,7 +50,7 @@
             position: absolute;
             text-align:center;
             font-size:30px;
-
+            color:#ccc;
             left: 50%;
             bottom: 60px;
             width: 40%;
@@ -89,7 +92,7 @@
         #open_menu_button {
             position: absolute;
             bottom:50px;
-
+            color: #ccc;
             
             right: 20px;
 
@@ -257,14 +260,84 @@
                 right: 35px;
             }
         }
+        /* When the height of the screen is less than 450 pixels, change the font-size of the links and position the close button again, so they don't overlap */
+        @media screen and (max-height: 450px) {
+            .overlay a {
+                font-size: 20px;
+            }
+
+            .overlay .closebtn {
+                font-size: 40px;
+                top: 15px;
+                right: 35px;
+            }
+        }
+
+        .overlaymain {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            background-image: url(textures/background.gif);
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center;
+            z-index: 9999;
+        }
+
+        .overlaymain-text {
+            position: absolute;
+            top: 20%;
+            width: 100%;
+            font-size: 25px;
+            color: #FFFFFF;
+            text-align: center;
+        }
+
+        .animate-character {
+            text-transform: uppercase;
+            background-image: linear-gradient( -225deg, #231557 0%, #44107a 29%, #ff1361 67%, #fff800 100% );
+            background-size: auto auto;
+            background-clip: border-box;
+            background-size: 200% auto;
+            color: #fff;
+            background-clip: text;
+            text-fill-color: transparent;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: textclip 2s linear infinite;
+            display: inline-block;
+            font-size: 40px;
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translate(-50%,-50%);
+            -ms-transform: translate(-50%,-50%);
+            text-align: center;
+        }
+
+        @keyframes textclip {
+            to {
+                background-position: 200% center;
+            }
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
     </style>
 </head>
 <body>
     <div id="info_ID">
-        <h1 id="id01">ID: N/A</h1>
+        <h1 class ="title_info"id="id01">ID: N/A</h1>
     </div>
     <div id="info_users">
-        <h1 id="id02">Players: N/A</h1>
+        <h1 class ="title_info"id="id02">Players: N/A</h1>
     </div>
 
     <button id="iphone_button" input type="button" onclick="askPermission()" name="myButton">Connect!</button>
@@ -326,6 +399,23 @@
     <!-- Use any element to open/show the overlay navigation menu -->
     <span class="navbar-toggler-icon" style="font-size:30px;cursor:pointer" id="open_menu_button" onclick="openNav()" z-index=500>Menu</span>
     <!--End overlay-->
+
+    <div id="maindisplay" class="overlaymain" onclick="closemain();askPermission()">
+        <h3 class="animate-character">Welcome to Gyroscope.live!</h3>
+        <div id="textoverlay" class="overlaymain-text">
+            <p>How to play: Use your phone's gyroscope function to guide the marble.</p>
+            <p>You must work with other players to move the marble to its goal...</p>
+            <p>Tilt your screen in the direction you wish to move the marble!</p>
+            <p>Click the button below to continue!</p>
+            <button onclick="askPermission();closemain()">Play</button>
+        </div>
+    </div>
+
+    <script>
+        function closemain() {
+            document.getElementById("maindisplay").style.display = "none";
+        }
+    </script>
 
     <canvas id="canvas1"></canvas>
 
@@ -389,7 +479,7 @@
         //so we can talk to the server
 
         socket.on('level_selected', function (level) {
-            console.log(level);
+            //console.log(level);
             generate_level(level_array[level]);
         });
 
@@ -398,8 +488,8 @@
             var x = document.getElementById('complete_timer');
             x.innerHTML = finish_time;
             document.getElementById("popup").style.height = "25%";
-            setTimeout(function () { document.getElementById("popup").style.height = "0%";},4500)
-            
+            setTimeout(function () { document.getElementById("popup").style.height = "0%"; }, 4500)
+
 
         });
 
@@ -420,10 +510,12 @@
             var x = document.getElementById('debug_info');
             if (this.checked) {
                 x.style.display = 'block'
+                arrowHelper.visible = true;
 
             }
             else {
                 x.style.display = 'none'
+                arrowHelper.visible = false;
 
             }
         });
@@ -443,6 +535,7 @@
         socket.on('client_reset', function () { //server wants us to reset
             world.remove(marble0[0]); //delete marble physics body
             scene.remove(marble0[1]); //delete marble 3d body
+            scene.remove(arrowHelper);
             marble0 = createMarble(scene, world, 1, 1, 1, 0, 0, 3);//make a new marble
         });
 
@@ -568,7 +661,7 @@
             const texture = new THREE.TextureLoader().load("textures/earth.png"); //temp texture
             texture.wrapS = THREE.RepeatWrapping;
             texture.wrapT = THREE.RepeatWrapping;
-            const material = new THREE.MeshBasicMaterial({ map: texture });
+            const material = new THREE.MeshLambertMaterial({ map: texture ,emissive:'#383838' });
 
             const sphere1 = new THREE.Mesh(geometry, material);
             sphere1.position.set(xpos, ypos, zpos);
@@ -581,6 +674,20 @@
             });
             world.addBody(sphereBody); //Add PHYSICS body to world
 
+            dir = new THREE.Vector3(0, 1, 0);
+
+            //normalize the direction vector (convert to vector of length 1)
+            //dir.normalize();
+
+            origin = new THREE.Vector3(xpos,ypos,zpos);
+            length = 1
+            hex = 0xffff00;
+
+            arrowHelper = new THREE.ArrowHelper(dir, origin, length, hex);
+
+            scene.add(arrowHelper);
+            arrowHelper.visible = false;
+
             return [sphereBody, sphere1]; //return our physicsbody and 3d body together
 
         }
@@ -591,7 +698,7 @@
             const texture = new THREE.TextureLoader().load(`textures\\${texture_choice}.png`); //temporary textures
             texture.wrapS = THREE.RepeatWrapping;
             texture.wrapT = THREE.RepeatWrapping;
-            const material = new THREE.MeshBasicMaterial({ map: texture });
+            const material = new THREE.MeshLambertMaterial({ map: texture });
 
             const box1 = new THREE.Mesh(geometry, material);
             box1.position.set(xpos, ypos, zpos);
@@ -623,10 +730,14 @@
         THREE.Object3D.DefaultUp.set(0, 0, 1);
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000); //create a camera
         camera.position.z = 10;
+        //camera.rotation.x = 20;
 
-        const light = new THREE.PointLight(0xff0000, 10, 0);
+        const amb_light = new THREE.AmbientLight(0xffffff);
+        scene.add(amb_light);
+
+        const light = new THREE.PointLight(0xFFFFFF, 5, 5);
         light.position.z = 10;
-        
+        scene.add(light);
 
 
         const renderer = new THREE.WebGLRenderer();
@@ -658,7 +769,7 @@
 
         // Setup our PHYSICS world
         var world = new CANNON.World();
-        world.gravity.set(0, 0, -9.82); // m/s²
+        world.gravity.set(0, 0, -5); // m/s²
 
 
         var fixedTimeStep = 1.0 / 60.0; // seconds
@@ -784,9 +895,22 @@
         //createBoxShape(scene,world,body,level[0].length
 
 
+        var dir = new THREE.Vector3(0, 1, 0);
 
+        //normalize the direction vector (convert to vector of length 1)
+        //dir.normalize();
+
+        var origin = new THREE.Vector3(0, 0,0);
+        var length = 1
+        var hex = 0xffff00;
+
+        var arrowHelper = new THREE.ArrowHelper(dir, origin, length, hex);
 
         let marble0 = createMarble(scene, world, 0.5, 1, 1, 2, 2, 3); //create marble
+
+        
+        
+
 
 
         //generate_level(level1);
@@ -835,10 +959,17 @@
 
             light.position.x = marble0[0].position.x //camera follows ball from above
             light.position.y = marble0[0].position.y
+            light.position.z = marble0[0].position.z
             //camera.position.z = marble0[0].position.z + 10
-            //console.log(world.gravity);
-            world.gravity.y = average_orientation[1] / -9.82;
-            world.gravity.x = average_orientation[2] / 9.82;
+            //console.log(scene.background.rotation);
+            world.gravity.y = average_orientation[1] / -5;
+            world.gravity.x = average_orientation[2] / 5;
+
+            arrowHelper.position.x = marble0[0].position.x;
+            arrowHelper.position.y = marble0[0].position.y;
+            arrowHelper.position.z = marble0[0].position.z;
+            arrowHelper.setLength(Math.sqrt(Math.pow(average_orientation[2], 2) + Math.pow(average_orientation[1], 2))/10);
+            arrowHelper.setDirection(new THREE.Vector3(average_orientation[2], -average_orientation[1], 0));
 
             //pivot.rotation.x = degrees_to_radians(average_orientation[1]); //move the entire maze
             //pivot.rotation.y = degrees_to_radians(average_orientation[2]);

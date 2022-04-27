@@ -63,7 +63,7 @@ level_array.push(level2);
 var current_level = 0;
 
 var world = new CANNON.World();
-world.gravity.set(0, 0, -9.82); // m/s²
+world.gravity.set(0, 0, -5); // m/s²
 
 
 var fixedTimeStep = 1.0 / 60.0; // seconds
