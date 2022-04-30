@@ -1,0 +1,46 @@
+branch-defaults:
+  comments:
+    environment: gyro321-dev
+  cube_rotation:
+    environment: gyro321-dev
+  default:
+    environment: null
+    group_suffix: null
+  final:
+    environment: gyro321-dev
+  gamerlights:
+    environment: gyro321-dev
+  gravity_controls:
+    environment: gyro321-dev
+  gyro_sockets:
+    environment: gyro321-dev
+  level_complete:
+    environment: gyro321-dev
+  level_select:
+    environment: gyro321-dev
+  main:
+    environment: gyro321-dev
+  minimal_files:
+    environment: gyro321-dev
+  physicstest:
+    environment: gyro321-dev
+  space:
+    environment: gyro321-dev
+  sync_position:
+    environment: gyro321-dev
+  working_physics_sync:
+    environment: gyro321-dev
+global:
+  application_name: gyro321
+  branch: null
+  default_ec2_keyname: null
+  default_platform: Node.js 16 running on 64bit Amazon Linux 2
+  default_region: us-east-1
+  include_git_submodules: true
+  instance_profile: null
+  platform_name: null
+  platform_version: null
+  profile: eb-cli
+  repository: null
+  sc: git
+  workspace_type: Application
