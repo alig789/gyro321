@@ -7,37 +7,142 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,height=device-height,user-scalable=no,initial-scale=1.0">
     <title>Gyroscope</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.7/css/all.css">
     <style>
-        body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color:rgb(66, 65, 65) }
+        body { 
+            position: fixed;
+            margin: 0; 
+               padding-bottom: 3rem;
+               font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+               background-color:rgb(66, 65, 65) }
         button {
+            
 			color: #ffffff;
 			background-color: #000000;
 			font-size: 19px;
 			border: 5px solid rgb(32, 32, 32);
 			padding: 15px 50px;
 			cursor: pointer;
+            z-index: 200;
+            text-align:center;
 		}
+        .title_info{
+            color:#ccc;
+        }
+        #iphone_button {
+            position: absolute;
+            bottom: 12%;
+            display: none;
+        }
+        #reset_button {
+            position: absolute;
+            left: 50%;
+            bottom: 50px;
+            width: 170px;
+            transform: translate(-50%);
+            display:none;
+        }
 		button:hover {
 			color: #212325;
 			background-color: #4b4b4b;
 		}
-        #info {
+        #timer {
             position: absolute;
-            top: px;
-            width: 100%;
+            text-align:center;
+            font-size:30px;
+            color:#ccc;
+            left: 50%;
+            bottom: 60px;
+            width: 40%;
+            transform: translate(-50%);
+        }
+        #info_ID {
+            position: absolute;
+            top:-20px;
+            text-align:left;
+            left: 20px;
+            width: 40%;
             
             z-index: 100;
-            display: block;
+            
+        }
+        #info_users {
+            position: absolute;
+            top:-20px;
+            text-align:right;
+            right:20px;
+    
+            width: 50%;
+            z-index: 100;
+            
         }
         #canvas1{
             position: absolute;
             top: 250px;
+            display:none;
+          
+            width: 250px;
+        }
+        #switch_stuff {
+            position: absolute;
+            z-index:300;
+            bottom: 85px;
+            
+        }
+        #open_menu_button {
+            position: absolute;
+            bottom:50px;
+            color: #ccc;
+            
+            right: 20px;
+
+        }
+        #debug_info {
+            display: none;
+            position: absolute;
+            line-height: 10px;
+            bottom: 50%;
+            left: 10px;
+            background-color: rgb(0,0,0); /* Black fallback color */
+            background-color: rgba(0,0,0, 0.7);
+            color:#FFFFFF;
+            padding:10px;
+        }
+        #popup {
+
+
+
+
+            top: 50%;
+            left: 50%;
+            text-align: center;
+            font-size: 20px;
+            transform: translate(-50%,-50%);
+            background-color: rgb(0,0,0); /* Black fallback color */
+            background-color: rgba(0,0,0, 0.7);
+            color: #FFFFFF;
+            display: block;
+            transition: 0.3s;
+            
+            height: 0%;
+            width: 50%;
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+
+            background-color: rgb(0,0,0); /* Black fallback color */
+            background-color: rgba(0,0,0, 0.7); /* Black w/opacity */
+            overflow-x: hidden; /* Disable horizontal scroll */
+            transition: 0.5s; /* 0.5 second transition effect to slide in or slide down the overlay (height or width, depending on reveal) */
+        }
+        .checkbox{
+            width:20px;
+            height:20px;
         }
         /* The switch - the box around the slider */
         .switch {
-            position: relative;
-            display: inline-block;
+            position: absolute;
+            text-align:left;
+            color:#FFFFFF;
             width: 60px;
             height: 34px;
         }
@@ -96,26 +201,231 @@
         .slider.round:before {
                 border-radius: 50%;
             }
+        /* The Overlay (background) */
+        .overlay {
+            /* Height & width depends on how you want to reveal the overlay (see JS below) */
+            height: 0%;
+            width: 100%;
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            left: 0;
+            top: 0;
+            background-color: rgb(0,0,0); /* Black fallback color */
+            background-color: rgba(0,0,0, 0.7); /* Black w/opacity */
+            overflow-x: hidden; /* Disable horizontal scroll */
+            transition: 0.5s; /* 0.5 second transition effect to slide in or slide down the overlay (height or width, depending on reveal) */
+        }
+
+        /* Position the content inside the overlay */
+        .overlay-content {
+            position: relative;
+            top: 25%; /* 25% from the top */
+            width: 100%; /* 100% width */
+            text-align: center; /* Centered text/links */
+            margin-top: 30px; /* 30px top margin to avoid conflict with the close button on smaller screens */
+        }
+
+        /* The navigation links inside the overlay */
+        .overlay a {
+            padding: 8px;
+            text-decoration: none;
+            font-size: 36px;
+            color: #FFFFFF;
+            display: block; /* Display block instead of inline */
+            transition: 0.3s; /* Transition effects on hover (color) */
+        }
+
+            /* When you mouse over the navigation links, change their color */
+            .overlay a:hover, .overlay a:focus {
+                color: #f1f1f1;
+            }
+
+        /* Position the close button (top right corner) */
+        .overlay .closebtn {
+            position: absolute;
+            top: 20px;
+            right: 45px;
+            font-size: 60px;
+        }
+
+        /* When the height of the screen is less than 450 pixels, change the font-size of the links and position the close button again, so they don't overlap */
+        @media screen and (max-height: 450px) {
+            .overlay a {
+                font-size: 20px
+            }
+
+            .overlay .closebtn {
+                font-size: 40px;
+                top: 15px;
+                right: 35px;
+            }
+        }
+        /* When the height of the screen is less than 450 pixels, change the font-size of the links and position the close button again, so they don't overlap */
+        @media screen and (max-height: 450px) {
+            .overlay a {
+                font-size: 20px;
+            }
+
+            .overlay .closebtn {
+                font-size: 40px;
+                top: 15px;
+                right: 35px;
+            }
+        }
+
+        .overlaymain {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            background-image: url(textures/background.gif);
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center;
+            z-index: 9999;
+
+        }
+
+        .overlaymain-text {
+            position: absolute;
+            top: 20%;
+            width: 100%;
+            font-size: 25px;
+            color: #FFFFFF;
+            text-align: center;
+        }
+
+        .animate-character {
+            text-transform: uppercase;
+            background-image: linear-gradient( -225deg, #231557 0%, #44107a 29%, #ff1361 67%, #fff800 100% );
+            background-size: auto auto;
+            background-clip: border-box;
+            background-size: 200% auto;
+            color: #fff;
+            background-clip: text;
+            text-fill-color: transparent;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: textclip 2s linear infinite;
+            display: inline-block;
+            font-size: 40px;
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translate(-50%,-50%);
+            -ms-transform: translate(-50%,-50%);
+            text-align: center;
+        }
+
+        @keyframes textclip {
+            to {
+                background-position: 200% center;
+            }
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
     </style>
 </head>
 <body>
-    <div id="info">
-        <h1 id="id01">ID: N/A</h1>
-        <h1 id="id02">Connected Users: N/A</h1>
-        <button id="iphone_button" input type="button" onclick="askPermission()" name="myButton">Connect!</button>
-        <button id="reset_button">RESET</button>
+    <div id="info_ID">
+        <h1 class ="title_info"id="id01">ID: N/A</h1>
+    </div>
+    <div id="info_users">
+        <h1 class ="title_info"id="id02">Players: N/A</h1>
+    </div>
 
+    <button id="iphone_button" input type="button" onclick="askPermission()" name="myButton">Connect!</button>
+    <button id="reset_button">RESET</button>
+    <div id="popup">
+        <p>Level Complete!</p>
+        <p id="complete_timer">Time: x:x:x:</p>
         <p></p>
+        <p>Loading next level...</p>
+    </div>
+    <!--
+    <div id="switch_stuff">
+
         <label class="switch">
-            <input id ="slider" type="checkbox" checked>
+            <input id="slider" type="checkbox" checked>
             <span class="slider"></span>
         </label>
     </div>
+    -->
+    <div id="debug_info">
+        <p>Your info:</p>
+        <p id="x1">X =</p>
+        <p id="y1">Y =</p>
+        <p id="z1">Z =</p>
+        <p>Average info:</p>
+        <p id="x2">X =</p>
+        <p id="y2">Y =</p>
+        <p id="z2">Z =</p>
 
+    </div>
+
+    <!-- The overlay -->
+    <div id="myNav" class="overlay" z-index=600>
+
+        <!-- Button to close the overlay navigation -->
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+
+        <!-- Overlay content -->
+        <div class="overlay-content">
+            <a onclick="reset();closeNav()" href="#">RESET</a>
+            <a onclick="choose_level()" href="#">Skip Level</a>
+            <a>
+                Show Debug Info
+                <input class="checkbox" id="debug_check" type="checkbox">
+                <span></span>
+            </a>
+            <a>
+                Specator Mode
+                <input class="checkbox" id="spectator_check" type="checkbox">
+                <span></span>
+            </a>
+            <a onclick="openmain();closeNav()" href="#">How to Play</a>
+
+
+        </div>
+
+    </div>
+
+    <!-- Use any element to open/show the overlay navigation menu -->
+    <span class="navbar-toggler-icon" style="font-size:30px;cursor:pointer" id="open_menu_button" onclick="openNav()" z-index=500>Menu</span>
+    <!--End overlay-->
+
+    <div id="maindisplay" class="overlaymain" onclick="closemain();askPermission()">
+        <h3 class="animate-character">Welcome to Gyroscope.live!</h3>
+        <div id="textoverlay" class="overlaymain-text">
+            <p>How to play: Use your phone's gyroscope function to guide the marble.</p>
+            <p>You must work with other players to move the marble to its goal...</p>
+            <p>Tilt your screen in the direction you wish to move the marble!</p>
+            <p>Click the button below to continue!</p>
+            <button onclick="askPermission();closemain()">Play</button>
+        </div>
+    </div>
+
+    <script>
+        function closemain() {
+            document.getElementById("maindisplay").style.display = "none";
+        }
+        function openmain() {
+            document.getElementById("maindisplay").style.display = "block";
+
+        }
+    </script>
 
     <canvas id="canvas1"></canvas>
 
-
+    <div id="timer"></div>
+    <!--<div id ="stop_timer" onclick="clearInterval(timerVar)">Stop time</div>-->
 
     <script type="text/javascript" src="/socket.io/socket.io.js"></script>
     <script type="text/javascript" src="three.js"></script>
@@ -125,6 +435,12 @@
 
     <script>
 
+        function choose_level() {
+            socket.emit('choose_level');
+        }
+
+
+
         function askPermission() {   //askPermission is an HTML requirement of iOS
             DeviceOrientationEvent.requestPermission() //This asks for permission (iOS requirement)
             window.addEventListener("deviceorientation", function (event) { //This listens to the phone orientation values
@@ -133,6 +449,22 @@
                 controller.z = event.gamma;
             });
         }
+        /* Open */
+        function openNav() {
+            document.getElementById("myNav").style.height = "100%";
+        }
+
+        /* Close */
+        function closeNav() {
+            document.getElementById("myNav").style.height = "0%";
+        }
+
+        window.addEventListener("resize", function () {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+
+        }, false);
 
         //Android users will have their data automatically working on page load from this one.  It can be removed, the button above should also work.
         if (window.DeviceOrientationEvent) {
@@ -144,39 +476,75 @@
             });
         }
 
-        var socket = io(); //so we can talk to the server
-       
-
-        var slider = document.getElementById('slider'); //sider to enable sending input or not
-
-
         iphone_button.addEventListener('click', function (e) {
             askPermission() //ask permission for gyro info
         });
+        var socket = io();
 
-        slider.addEventListener('change', function () { //Check if the slider is modified
+        //so we can talk to the server
+
+        socket.on('level_selected', function (level) {
+            //console.log(level);
+            generate_level(level_array[level]);
+        });
+
+        socket.on('level_complete', function (finish_time) {
+
+            var x = document.getElementById('complete_timer');
+            x.innerHTML = "Time: " + finish_time;
+            document.getElementById("popup").style.height = "25%";
+            setTimeout(function () { document.getElementById("popup").style.height = "0%"; }, 4500)
+
+
+        });
+
+        var spectator_check = document.getElementById('spectator_check'); //sider to enable sending input or not
+
+        spectator_check.addEventListener('change', function () { //Check if the slider is modified
             if (this.checked) {
-                gyro_enabled = true; //enabled by default
+                gyro_enabled = false; //enabled by default
             }
             else {
-                gyro_enabled = false;
+                gyro_enabled = true;
+
+            }
+        });
+        var debug_check = document.getElementById('debug_check'); //sider to enable sending input or not
+
+        debug_check.addEventListener('change', function () { //Check if the slider is modified
+            var x = document.getElementById('debug_info');
+            if (this.checked) {
+                x.style.display = 'block'
+                arrowHelper.visible = true;
+
+            }
+            else {
+                x.style.display = 'none'
+                arrowHelper.visible = false;
+
             }
         });
 
         reset_button.addEventListener('click', function (e) {
-            
-            socket.emit('chat message', "stuff"); //debug method, print client info into server log
-            socket.emit('reset'); //tell the server to tell all clients to reset
+            reset();
+
 
         });
+        function reset() {
+            socket.emit('chat message', "stuff"); //debug method, print client info into server log
+            socket.emit('reset');//tell the server to tell all clients to reset
+
+            closeNav();
+        }
 
         socket.on('client_reset', function () { //server wants us to reset
             world.remove(marble0[0]); //delete marble physics body
             scene.remove(marble0[1]); //delete marble 3d body
-            marble0 = createMarble(scene, world, 1, 1, 1, 0, 0, 3); //make a new marble
+            scene.remove(arrowHelper);
+            marble0 = createMarble(scene, world, 1, 1, 1, 0, 0, 3);//make a new marble
         });
 
-        socket.on('new_connect', function (id,position) { //will be sent to us when server sees we connected
+        socket.on('new_connect', function (id, current_level) { //will be sent to us when server sees we connected
 
             const element = document.getElementById("id01"); //Display ID across the top
             element.innerHTML = "ID: " + id;
@@ -184,22 +552,23 @@
 
             gyroObject.num_id = id
             socket.emit('created_gyro', gyroObject, id);
-            average_position = position //Set the position the ball was before we connected
 
+            generate_level(level_array[current_level]);
             runGyroscope();
 
         });
 
         socket.on('update_count', function (users) { //whenever a new user joins, update the connected clients counter
             const element2 = document.getElementById("id02");
-            element2.innerHTML = "Connected Users: " + users;
+            element2.innerHTML = "Players: " + users;
         });
 
-        socket.on('average_orientation', function (orientation,position,velocity) {//IMPORTANT marble info
+        socket.on('average_orientation', function (orientation, position, velocity, timer_string) {//IMPORTANT marble info
 
             average_orientation = orientation;
             average_position = position;
             average_velocity = velocity;
+            document.getElementById("timer").innerHTML = timer_string;
         });
 
         //screen.orientation.lock("portrait"); //only works in fullscreen? need to fix this
@@ -208,7 +577,15 @@
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-
+        const debug_stuff = document.getElementById('debug_info');
+        function update_debug() {
+            document.getElementById("x1").innerHTML = "X = " + parseInt(gyroObject.x)
+            document.getElementById("y1").innerHTML = "Y = " + parseInt(gyroObject.y)
+            document.getElementById("z1").innerHTML = "Z = " + parseInt(gyroObject.z)
+            document.getElementById("x2").innerHTML = "X = " + parseInt(average_orientation[0])
+            document.getElementById("y2").innerHTML = "Y = " + parseInt(average_orientation[1])
+            document.getElementById("z2").innerHTML = "Z = " + parseInt(average_orientation[2])
+        }
         let updateCount = 0;
 
         class displayCanvas {
@@ -218,7 +595,7 @@
             update() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                ctx.font = "20px Georgia";
+                ctx.font = "100px Georgia";
                 ctx.fillText("Your info:", 10, 20);
                 ctx.fillText("x: " + parseInt(gyroObject.x), 10, 50);
                 ctx.fillText("y: " + parseInt(gyroObject.y), 10, 80);
@@ -236,10 +613,10 @@
 
         }
 
-        
+
 
         //Android users will have their data automatically working on page load from this one.  It can be removed, the button above should also work.
-        
+
         //This will be the main Gyroscope object, we can initialize it in the main (script.js) if we've confirmed a mobile device.
         //That object can then use the functions within the class below.
         const controller = {
@@ -286,10 +663,10 @@
         function createMarble(scene, world, xscale, yscale, zscale, xpos, ypos, zpos) { //create our marble. We only need 1
 
             const geometry = new THREE.SphereGeometry(xscale); //radius
-            const texture = new THREE.TextureLoader().load("textures/dirt.png"); //temp texture
+            const texture = new THREE.TextureLoader().load("textures/earth.png"); //temp texture
             texture.wrapS = THREE.RepeatWrapping;
             texture.wrapT = THREE.RepeatWrapping;
-            const material = new THREE.MeshBasicMaterial({ map: texture });
+            const material = new THREE.MeshLambertMaterial({ map: texture ,emissive:'#383838' });
 
             const sphere1 = new THREE.Mesh(geometry, material);
             sphere1.position.set(xpos, ypos, zpos);
@@ -302,26 +679,40 @@
             });
             world.addBody(sphereBody); //Add PHYSICS body to world
 
+            dir = new THREE.Vector3(0, 1, 0);
+
+            //normalize the direction vector (convert to vector of length 1)
+            //dir.normalize();
+
+            origin = new THREE.Vector3(xpos,ypos,zpos);
+            length = 1
+            hex = 0xffff00;
+
+            arrowHelper = new THREE.ArrowHelper(dir, origin, length, hex);
+
+            scene.add(arrowHelper);
+            arrowHelper.visible = false;
+
             return [sphereBody, sphere1]; //return our physicsbody and 3d body together
-            
+
         }
         //createBoxShape will create both a THREE.js object and add it to our maze physics object "pivot"
-        function createBoxShape(scene, world,body, xscale, yscale, zscale, xpos, ypos, zpos) {
+        function createBoxShape(texture_choice, scene, world, body, xscale, yscale, zscale, xpos, ypos, zpos) {
 
             const geometry = new THREE.BoxGeometry(xscale, yscale, zscale); //create 3d object
-            const texture = new THREE.TextureLoader().load("textures/wood.png"); //temporary textures
+            const texture = new THREE.TextureLoader().load(`textures\\${texture_choice}.png`); //temporary textures
             texture.wrapS = THREE.RepeatWrapping;
             texture.wrapT = THREE.RepeatWrapping;
-            const material = new THREE.MeshBasicMaterial({ map: texture });
+            const material = new THREE.MeshLambertMaterial({ map: texture });
 
             const box1 = new THREE.Mesh(geometry, material);
             box1.position.set(xpos, ypos, zpos);
-            
+
             pivot.add(box1); //
 
-            boxBody = new CANNON.Box(new CANNON.Vec3(xscale/2, yscale/2, zscale/2));
+            boxBody = new CANNON.Box(new CANNON.Vec3(xscale / 2, yscale / 2, zscale / 2));
             body.addShape(boxBody, new CANNON.Vec3(xpos, ypos, zpos));
-            
+
 
 
             return;
@@ -329,7 +720,7 @@
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
-            //do stuff 
+            //do stuff
         });
 
         function degrees_to_radians(degrees) { //orientation is stored in degrees
@@ -342,15 +733,26 @@
 
         const scene = new THREE.Scene(); //create our 3D scene
         THREE.Object3D.DefaultUp.set(0, 0, 1);
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000); //create a camera 
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000); //create a camera
         camera.position.z = 10;
+        //camera.rotation.x = 20;
+
+        const amb_light = new THREE.AmbientLight(0xffffff);
+        scene.add(amb_light);
+
+        const light = new THREE.PointLight(0xFFFFFF, 5, 5);
+        light.position.z = 10;
+        scene.add(light);
 
 
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        scene.background = new THREE.Color(0x707070); //we can get a skybox or change the color
+        const loader = new THREE.CubeTextureLoader();
+        const bgTexture = loader.load(['textures/posx.png', 'textures/negx.png', 'textures/posy.png', 'textures/negy.png', 'textures/posz.png', 'textures/negz.png']);
+        scene.background = bgTexture;
+        //scene.background = new THREE.Color(0x707070); //we can get a skybox or change the color
 
 
 
@@ -366,13 +768,13 @@
 
         let frameCounter = 0;
 
-        const pivot = new THREE.Group(); //our MAZE 3d objects
+
 
 
 
         // Setup our PHYSICS world
         var world = new CANNON.World();
-        world.gravity.set(0, 0, -9.82); // m/s²
+        world.gravity.set(0, 0, -5); // m/s²
 
 
         var fixedTimeStep = 1.0 / 60.0; // seconds
@@ -385,8 +787,8 @@
             if (lastTime !== undefined) {
                 var dt = (time - lastTime) / 1000;
                 world.step(fixedTimeStep, dt, maxSubSteps);
-                copyCoords(marble0[1], marble0[0]); //copy calculated physics body attributes to 
-                copyCoords(body, pivot); 
+                copyCoords(marble0[1], marble0[0]); //copy calculated physics body attributes to
+                copyCoords(body, pivot);
 
             }
 
@@ -405,31 +807,226 @@
         }
 
         //MAIN CODE:
+        //our representation of a level
+        let level_array = [];
+        let level0 = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 3, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 4, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 4, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
+        level_array.push(level0);
+        let level1 = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 1, 1, 1, 1, 0, 0, 1],
+            [1, 0, 0, 1, 1, 1, 1, 0, 0, 1],
+            [1, 3, 0, 1, 4, 0, 0, 0, 0, 1],
+            [1, 0, 0, 1, 4, 0, 0, 0, 0, 1],
+            [1, 0, 0, 1, 1, 1, 1, 0, 0, 1],
+            [1, 0, 0, 1, 1, 1, 1, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
+        level_array.push(level1);
+        let level2 = [
+            [1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+            [1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0],
+            [1, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]]
+        level_array.push(level2);
+        let level3 = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 3, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+            [1, 4, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+            [1, 4, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+            [1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
+        level_array.push(level3);
+        let level4 = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 4, 4, 1],
+            [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 1],
+            [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 3, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+            [1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
+        level_array.push(level4);
+        let level5 = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 3, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1],
+            [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1],
+            [1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1],
+            [1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+            [1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 0, 0, 0, 0, 1],
+            [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 4, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
+        level_array.push(level5);
+        let level6 = [
+            [2, 2, 2, 0, 0, 0, 2, 2, 2, 2, 2, 2, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+            [2, 2, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 0, 4, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+            [2, 0, 0, 0, 2, 0, 0, 0, 2, 2, 2, 2, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+            [0, 0, 0, 2, 2, 2, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+            [0, 0, 2, 2, 2, 2, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 0, 2, 2, 2, 2, 2, 2, 2, 2],
+            [2, 0, 0, 0, 2, 2, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 2, 2, 2, 2, 2],
+            [2, 2, 0, 0, 2, 2, 2, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 2, 2, 2, 2],
+            [0, 0, 0, 2, 2, 2, 2, 0, 3, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 2, 2, 2],
+            [0, 0, 0, 2, 2, 2, 2, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 2, 2],
+            [0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0],
+            [0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 2, 2, 0, 0, 0, 0, 2, 2, 2, 2, 0, 0],
+            [0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 0],
+            [2, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0, 2, 2, 0, 0, 2, 2, 2, 0, 2, 2, 2, 2, 2, 0],
+            [2, 0, 0, 2, 2, 2, 2, 2, 2, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0, 2, 2, 2, 2, 2, 0],
+            [2, 2, 0, 0, 0, 0, 2, 2, 2, 0, 0, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0],
+            [2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0]]
+        level_array.push(level6);
 
-        let level1 =[
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 0, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 0, 1, 1, 1, 1, 1, 1, 1, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
-        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]]
 
-
-        let marble0 = createMarble(scene, world, 1, 1, 1, 0, 0, 3); //create marble
-
-        body = new CANNON.Body({//create physics body for MAZE
+        let pivot = new THREE.Group(); //our MAZE 3d objects
+        let body = new CANNON.Body({//create physics body for MAZE
             mass: 0
         });
-        createBoxShape(scene, world, body, 10, 10, 1, 0, 0, 0);//add WALLS and FLOOR to maze
-        createBoxShape(scene, world, body, 1, 10, 1, 5, 0, 1);
-        createBoxShape(scene, world, body, 1, 10, 1, -5, 0, 1);
+        let goal = new CANNON.Body({//create physics body for MAZE
+            mass: 0
+        });
 
-        world.addBody(body);//add maze physics body
-        scene.add(pivot);//add maze 3d body
+        function generate_level(level) {
+
+
+            world.remove(body);
+            world.remove(goal);
+            scene.remove(pivot);
+            body = new CANNON.Body({//create physics body for MAZE
+                mass: 0
+            });
+            goal = new CANNON.Body({//create physics body for MAZE
+                mass: 0
+            });
+            pivot = new THREE.Group();
+            //create floor
+            for (let i = 0; i < level.length; i++) {
+                for (let j = 0; j < level[i].length; j++) {
+
+                    if (level[i][j] == 0 || level[i][j] == 3) {
+                        createBoxShape('floor', scene, world, body, 1, 1, 1, i - (level.length / 2), j - (level[0].length / 2), 0);
+
+                    }
+                    if (level[i][j] == 4) {
+                        createBoxShape('finish', scene, world, goal, 1, 1, 1, i - (level.length / 2), j - (level[0].length / 2), 0);
+                    }
+                }
+            }
+
+
+            for (let i = 0; i < level.length; i++) {
+                for (let j = 0; j < level[i].length; j++) {
+
+                    if (level[i][j] == 1) {
+                        createBoxShape('wall', scene, world, body, 1, 1, 1, i - (level.length / 2), j - (level[0].length / 2), 1);
+                    }
+                }
+            }
+
+            world.addBody(body);//add maze physics body
+            world.addBody(goal);
+            scene.add(pivot);//add maze 3d body
+
+        }
+        //createBoxShape(scene,world,body,level[0].length
+
+
+        var dir = new THREE.Vector3(0, 1, 0);
+
+        //normalize the direction vector (convert to vector of length 1)
+        //dir.normalize();
+
+        var origin = new THREE.Vector3(0, 0,0);
+        var length = 1
+        var hex = 0xffff00;
+
+        var arrowHelper = new THREE.ArrowHelper(dir, origin, length, hex);
+
+        let marble0 = createMarble(scene, world, 0.5, 1, 1, 2, 2, 3); //create marble
+        var current_key = null;
+        window.addEventListener('keydown', function (e) {
+            current_key = e.keyCode;
+        })
+        window.addEventListener('keyup', function (e) {
+            current_key = null;
+            controller.y = 0;
+            controller.z = 0;
+        })
+        
+
+
+
+        //generate_level(level1);
+
+        //createBoxShape(scene, world, body, 10, 10, 1, 0, 0, 0);//add WALLS and FLOOR to maze
+        //createBoxShape(scene, world, body, 1, 10, 1, 5, 0, 1);
+        //createBoxShape(scene, world, body, 1, 10, 1, -5, 0, 1);
+
+
 
 
 
@@ -437,10 +1034,11 @@
         //This is the recursive function that will keep updating the gyroscope and display canvas
         function runGyroscope() {
             gyroObject.update();
-            display.update();
+            update_debug();
             frameCounter++;
             //console.log(marble0[0].position);
-            if (frameCounter % 5 == 0 && average_position != null) { 
+
+            if (frameCounter % 5 == 0 && average_position != null ) {
                 marble0[0].position.x = average_position.x;
                 marble0[0].position.y = average_position.y;
                 marble0[0].position.z = average_position.z;
@@ -448,26 +1046,51 @@
                 marble0[0].velocity.x = average_velocity.x;
                 marble0[0].velocity.y = average_velocity.y;
                 marble0[0].velocity.z = average_velocity.z;
-        }
+
+            }
 
             /*if (frameCounter % 5 == 0 && average_position != null && average_velocity != null) { //synchronize positions every 7 ticks
                 marble0[0].position.x = average_position[0];
                 marble0[0].position.y = average_position[1];
                 marble0[0].position.z = average_position[2];
             }
-                
+
                 marble0[0].velocity.x = average_velocity[0];
                 marble0[0].velocity.y = average_velocity[1];
                 marble0[0].velocity.z = average_velocity[2];
 
             }*/
+            //world.gravity.x += 0.1;
+
             camera.position.x = marble0[0].position.x //camera follows ball from above
             camera.position.y = marble0[0].position.y
-            camera.position.z = marble0[0].position.z + 10
 
-            
-            pivot.rotation.x = degrees_to_radians(average_orientation[1]); //move the entire maze
-            pivot.rotation.y = degrees_to_radians(average_orientation[2]);
+            light.position.x = marble0[0].position.x
+            light.position.y = marble0[0].position.y
+            light.position.z = marble0[0].position.z
+
+            //camera.position.z = marble0[0].position.z + 10
+            //console.log(scene.background.rotation);
+            world.gravity.y = average_orientation[1] / -5;
+            world.gravity.x = average_orientation[2] / 5;
+
+            arrowHelper.position.x = marble0[0].position.x;
+            arrowHelper.position.y = marble0[0].position.y;
+            arrowHelper.position.z = marble0[0].position.z;
+
+            arrowHelper.setLength(Math.sqrt(Math.pow(average_orientation[2], 2) + Math.pow(average_orientation[1], 2))/10);
+            arrowHelper.setDirection(new THREE.Vector3(average_orientation[2], (-1 *average_orientation[1]), 0).normalize());
+
+            //pivot.rotation.x = degrees_to_radians(average_orientation[1]); //move the entire maze
+            //pivot.rotation.y = degrees_to_radians(average_orientation[2]);
+
+            if (current_key == 37) { controller.z = -30; }
+            if (current_key == 39) { controller.z = 30; }
+            if (current_key == 38) { controller.y = -30; }
+            if (current_key == 40) { controller.y = 30; }
+            if (current_key == 79) { camera.position.z++; }
+            if (current_key == 80) { camera.position.z--; }
+
 
 
 
