@@ -1,0 +1,22 @@
+1) Enter in the URL: www.gyroscope.live.
+2) Upon connecting to the site, review the instructions on the main screen.
+3) Click the play button to continue.
+4) Verify you have an assigned ID number on the top left, and that you see a player count.
+5) Turn on portrait lock on your phone.
+6) Move your phone in any direction you wish. Verify the ball moves in the same direction.
+7) Put your phone down and do not attempt to move it. Verify the ball stops moving as well (ball should not already be in motion).
+8) Play through the first level. Verify the level completes when you reach the goal, and that you see a message indicating this.
+9) Verify the next level loads in successfully.
+10) Click on the menu button on the bottom right corner. Verify a menu displays on the screen.
+11) Click the "RESET" button. Verify that the ball is reset to spawn.
+12) Click on the "Skip Level" button. Verify the level is skipped and the next level loads successfully.
+13) Click on "Show Debug Info". Exit the menu.
+14) Verify there is a new popup to the left of the screen showing your info and average info.
+15) Move the marble with your phone. Check to see if the average info and your info update according to the movement.
+16) Verify an arrow appears in the direction you move your marble.
+17) Reopen the menu. Turn off Debug mode.
+18) Click on "Spectator Mode". Exit the menu.
+19) Try to move the marble with your phone. Verify the marble does not move.
+20) Reopen the menu. Click on "How to Play". Verify the loading screen reappears.
+21) Click anywhere for the screen to disappear. Verify it disappears when you click.
+22) Play through each level. Ensure the levels load correctly and the level finishes when you reach the goal for each one.
